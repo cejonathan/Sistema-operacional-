@@ -1,13 +1,1139 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de VTR</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --font-sans: 'Inter', sans-serif;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            background-color: #f8fafc;
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+        }
 
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-active {
+            color: #2563eb;
+        }
+
+        .nav-active i {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Custom animations */
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .animate-slide-up {
+            animation: slideUp 0.3s ease-out forwards;
+        }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-24">
+    <!-- Header -->
+    <header class="sticky top-0 z-40 w-full glass border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 p-1.5 rounded-lg">
+                <i data-lucide="shield" class="w-5 h-5 text-white"></i>
+            </div>
+            <h1 class="font-bold text-lg tracking-tight">Controle VTR</h1>
+        </div>
+        <div id="status-badge" class="hidden px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200">
+            KM ABERTO
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="app-content" class="max-w-md mx-auto p-4 space-y-6">
+        <!-- Views will be injected here -->
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 glass border-t border-slate-200 safe-bottom">
+        <div class="max-w-md mx-auto flex justify-around items-center h-16">
+            <button onclick="switchView('km')" id="nav-km" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
+                <i data-lucide="gauge" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium">KM</span>
+            </button>
+            <button onclick="switchView('ocorrencia')" id="nav-ocorrencia" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
+                <i data-lucide="file-text" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium">Ocorrência</span>
+            </button>
+            <button onclick="switchView('historico')" id="nav-historico" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
+                <i data-lucide="history" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium">Histórico</span>
+            </button>
+            <button onclick="switchView('config')" id="nav-config" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
+                <i data-lucide="settings" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium">Ajustes</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Modals Container -->
+    <div id="modal-container" class="fixed inset-0 z-[60] hidden flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div id="modal-content" class="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl transform translate-y-full sm:translate-y-0 sm:scale-95 transition-transform duration-300">
+            <!-- Modal content injected here -->
+        </div>
+    </div>
+
+    <script>
+        // --- Constants & State ---
+        const CODIGOS_DEFAULT = [
+            "1 Acompanhamento de alunos", "2 Apoio em obras", "3 Apoio em eventos", "4 Apoio ao agente de trânsito",
+            "5 Acompanhamento de veículos (escolta)", "6 Fiscalização de caminhão", "7 COI", "8 Ação educativa",
+            "9 Autorização de Caçamba/Caminhão", "10 Apoio órgão público/EDP/Telefonia", "11 Monitoramento",
+            "12 Sinistro de trânsito sem vítima", "13 Sinistro de trânsito com vítima", "14 Animais na pista",
+            "15 Trabalho administrativo", "16 Transporte interno", "17 Solicitação de munícipe", "18 Operação em semáforo",
+            "19 Fiscalização em circulação", "20 Apoio a veículo quebrado", "21 Travessia de alunos", "22 Apoio a feira livre",
+            "23 Desvio de trânsito", "24 Deslocamento ao centro do servidor", "25 Apoio a eventos religiosos",
+            "26 Aferição de radar", "27 Autorizar veículos a passar no vermelho", "28 Manutenção da VTR", "29 Obra SAAE",
+            "30 Remoção de veículo", "31 Remoção de veículo abandonado", "32 Apoio a pintura", "33 Apoio a poda de árvore",
+            "34 Apoio a troca de poste/Recolha de fios caídos", "35 Deslocamento para diretoria de trânsito",
+            "36 Deslocamento limpar VTR", "37 Blitz", "38 Fiscalização em extensão", "39 Controle de fluxo",
+            "40 Fiscalização em ponto fixo", "41 Posturas", "42 Vistoria"
+        ];
+        const LOCAIS_DEFAULT = Array.from({ length: 15 }, (_, i) => `Setor ${i + 1}`);
+        const DET_CODES = ["02", "03", "06", "07", "08", "10", "12", "17", "18", "20", "22", "35", "41", "44", "46", "47", "49", "54", "59", "61", "62", "65", "68", "75", "86", "89"];
+        const VTR_CODES = ["AL 1389", "AL 1390", "AL 1393", "AL 1394", "AL 1395", "MH 01", "MH 02", "MH 03", "MH 04", "MH 05", "MH 06", "MH 07", "MH 08"];
+
+        let state = {
+            currentView: 'km',
+            kmRecords: JSON.parse(localStorage.getItem('kmRecords') || '[]'),
+            reports: JSON.parse(localStorage.getItem('reports') || '[]'),
+            settings: JSON.parse(localStorage.getItem('settings') || JSON.stringify({
+                agente: '',
+                vtr: VTR_CODES[0],
+                codigos: CODIGOS_DEFAULT,
+                locais: LOCAIS_DEFAULT
+            }))
+        };
+
+        // --- Utilities ---
+        function saveState() {
+            localStorage.setItem('kmRecords', JSON.stringify(state.kmRecords));
+            localStorage.setItem('reports', JSON.stringify(state.reports));
+            localStorage.setItem('settings', JSON.stringify(state.settings));
+            updateStatusBadge();
+        }
+
+        function updateStatusBadge() {
+            const activeKM = state.kmRecords.find(r => r.status === 'aberto');
+            const badge = document.getElementById('status-badge');
+            if (activeKM) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function formatDate(date) {
+            return new Intl.DateTimeFormat('pt-BR').format(new Date(date));
+        }
+
+        function formatTime(date) {
+            return new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(date));
+        }
+
+        function generateId() {
+            return Math.random().toString(36).substr(2, 9);
+        }
+
+        // --- View Management ---
+        function switchView(view) {
+            state.currentView = view;
+            render();
+            
+            // Update Navigation UI
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('nav-active'));
+            document.getElementById(`nav-${view}`).classList.add('nav-active');
+        }
+
+        function render() {
+            const content = document.getElementById('app-content');
+            content.innerHTML = '';
+            
+            switch(state.currentView) {
+                case 'km': renderKMView(content); break;
+                case 'ocorrencia': renderOcorrenciaView(content); break;
+                case 'historico': renderHistoricoView(content); break;
+                case 'config': renderConfigView(content); break;
+            }
+            
+            lucide.createIcons();
+            window.scrollTo(0, 0);
+        }
+
+        // --- KM View ---
+        function renderKMView(container) {
+            const activeRecord = state.kmRecords.find(r => r.status === 'aberto');
+            
+            const div = document.createElement('div');
+            div.className = 'animate-slide-up space-y-4';
+            
+            if (!activeRecord) {
+                div.innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
+                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="play-circle" class="text-blue-600"></i>
+                            Abrir KM
+                        </h2>
+                        <form id="km-open-form" class="space-y-4">
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">VTR</label>
+                                <select name="vtr" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                    ${VTR_CODES.map(v => `<option value="${v}" ${v === state.settings.vtr ? 'selected' : ''}>${v}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Condutor</label>
+                                <input type="text" name="condutor" value="${state.settings.agente}" placeholder="Nome do condutor" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Apoio (Opcional)</label>
+                                <input type="text" name="apoio" placeholder="Nome do apoio" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">KM Inicial</label>
+                                    <input type="number" name="kmInicial" placeholder="00000" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Hora Inicial</label>
+                                    <input type="time" name="horaInicial" value="${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform">
+                                INICIAR PLANTÃO
+                            </button>
+                        </form>
+                    </div>
+                `;
+                container.appendChild(div);
+                
+                document.getElementById('km-open-form').onsubmit = (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const newRecord = {
+                        id: generateId(),
+                        vtr: formData.get('vtr'),
+                        condutor: formData.get('condutor'),
+                        apoio: formData.get('apoio'),
+                        kmInicial: formData.get('kmInicial'),
+                        horaInicial: formData.get('horaInicial'),
+                        status: 'aberto',
+                        timestamp: new Date().toISOString()
+                    };
+                    state.kmRecords.push(newRecord);
+                    saveState();
+                    render();
+                };
+            } else {
+                div.innerHTML = `
+                    <div class="bg-blue-600 text-white p-6 rounded-2xl shadow-xl shadow-blue-200 relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 opacity-10">
+                            <i data-lucide="gauge" class="w-32 h-32"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <p class="text-blue-100 text-xs font-bold uppercase tracking-widest">Em Serviço</p>
+                                    <h3 class="text-2xl font-black">${activeRecord.vtr}</h3>
+                                </div>
+                                <button onclick="editKM('${activeRecord.id}')" class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white/10 p-3 rounded-xl">
+                                    <p class="text-blue-100 text-[10px] uppercase font-bold">KM Inicial</p>
+                                    <p class="text-xl font-bold">${activeRecord.kmInicial}</p>
+                                </div>
+                                <div class="bg-white/10 p-3 rounded-xl">
+                                    <p class="text-blue-100 text-[10px] uppercase font-bold">Hora Início</p>
+                                    <p class="text-xl font-bold">${activeRecord.horaInicial}</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-white/10">
+                                <p class="text-blue-100 text-[10px] uppercase font-bold">Equipe</p>
+                                <p class="font-medium">${activeRecord.condutor}${activeRecord.apoio ? ' / ' + activeRecord.apoio : ''}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
+                        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="stop-circle" class="text-red-600"></i>
+                            Fechar KM
+                        </h2>
+                        <form id="km-close-form" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">KM Final</label>
+                                    <input type="number" name="kmFinal" placeholder="00000" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Hora Final</label>
+                                    <input type="time" name="horaFinal" value="${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-red-200 active:scale-[0.98] transition-transform">
+                                ENCERRAR PLANTÃO
+                            </button>
+                        </form>
+                    </div>
+                `;
+                container.appendChild(div);
+                
+                document.getElementById('km-close-form').onsubmit = (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const record = state.kmRecords.find(r => r.id === activeRecord.id);
+                    record.kmFinal = formData.get('kmFinal');
+                    record.horaFinal = formData.get('horaFinal');
+                    record.status = 'fechado';
+                    saveState();
+                    render();
+                };
+            }
+        }
+
+        function editKM(id) {
+            const record = state.kmRecords.find(r => r.id === id);
+            showModal(`
+                <h2 class="text-xl font-bold mb-4">Editar KM</h2>
+                <form id="edit-km-form" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-500 uppercase">KM Inicial</label>
+                        <input type="number" name="kmInicial" value="${record.kmInicial}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-500 uppercase">Hora Inicial</label>
+                        <input type="time" name="horaInicial" value="${record.horaInicial}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold">Cancelar</button>
+                        <button type="submit" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Salvar</button>
+                    </div>
+                </form>
+            `);
+            
+            document.getElementById('edit-km-form').onsubmit = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                record.kmInicial = formData.get('kmInicial');
+                record.horaInicial = formData.get('horaInicial');
+                saveState();
+                closeModal();
+                render();
+            };
+        }
+
+        // --- Ocorrencia View ---
+        function renderOcorrenciaView(container) {
+            const div = document.createElement('div');
+            div.className = 'animate-slide-up space-y-6';
+            
+            div.innerHTML = `
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="renderOcorrenciaForm('log')" class="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-slate-200 card-shadow active:bg-slate-50">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase">Log</span>
+                    </button>
+                    <button onclick="renderOcorrenciaForm('simples')" class="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-slate-200 card-shadow active:bg-slate-50">
+                        <div class="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                            <i data-lucide="list"></i>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase">Simples</span>
+                    </button>
+                    <button onclick="renderOcorrenciaForm('especial')" class="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-slate-200 card-shadow active:bg-slate-50">
+                        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                            <i data-lucide="alert-triangle"></i>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase">Sinistro</span>
+                    </button>
+                </div>
+                <div id="ocorrencia-form-container"></div>
+            `;
+            container.appendChild(div);
+            lucide.createIcons();
+        }
+
+        function renderOcorrenciaForm(type) {
+            const container = document.getElementById('ocorrencia-form-container');
+            container.innerHTML = '';
+            
+            const activeKM = state.kmRecords.find(r => r.status === 'aberto');
+            
+            if (type === 'log') {
+                container.innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow animate-slide-up">
+                        <h3 class="text-lg font-bold mb-4">Novo Log de Atividade</h3>
+                        <form id="log-form" class="space-y-4">
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Código</label>
+                                <select name="codigo" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                    ${state.settings.codigos.map(c => `<option value="${c}">${c}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Local</label>
+                                <select name="local" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                    ${state.settings.locais.map(l => `<option value="${l}">${l}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Início</label>
+                                    <input type="time" name="inicio" value="${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Término</label>
+                                    <input type="time" name="termino" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-transform">
+                                SALVAR LOG
+                            </button>
+                        </form>
+                    </div>
+                `;
+                document.getElementById('log-form').onsubmit = (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const report = {
+                        id: generateId(),
+                        type: 'log',
+                        agent: state.settings.agente,
+                        timestamp: Date.now(),
+                        data: {
+                            codigo: formData.get('codigo'),
+                            local: formData.get('local'),
+                            inicio: formData.get('inicio'),
+                            termino: formData.get('termino'),
+                            vtr: activeKM ? activeKM.vtr : state.settings.vtr,
+                            condutor: activeKM ? activeKM.condutor : state.settings.agente,
+                            apoio: activeKM ? activeKM.apoio : ''
+                        }
+                    };
+                    state.reports.push(report);
+                    saveState();
+                    switchView('historico');
+                };
+            } else if (type === 'simples') {
+                let items = [];
+                container.innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow animate-slide-up">
+                        <h3 class="text-lg font-bold mb-4">Registro Simples</h3>
+                        <div class="space-y-4">
+                            <div class="flex gap-2">
+                                <div class="flex-1 space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Código</label>
+                                    <select id="simples-codigo" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                        ${state.settings.codigos.map(c => `<option value="${c}">${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="flex-1 space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Local</label>
+                                    <select id="simples-local" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                        ${state.settings.locais.map(l => `<option value="${l}">${l}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <button id="add-simples" class="mt-6 p-3 bg-green-600 text-white rounded-xl">
+                                    <i data-lucide="plus"></i>
+                                </button>
+                            </div>
+                            <div id="simples-list" class="space-y-2"></div>
+                            <button id="save-simples" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg hidden">
+                                FINALIZAR REGISTRO
+                            </button>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                
+                const addBtn = document.getElementById('add-simples');
+                const listDiv = document.getElementById('simples-list');
+                const saveBtn = document.getElementById('save-simples');
+                
+                addBtn.onclick = () => {
+                    const codigo = document.getElementById('simples-codigo').value;
+                    const local = document.getElementById('simples-local').value;
+                    items.push({ codigo, local });
+                    updateList();
+                };
+                
+                function updateList() {
+                    listDiv.innerHTML = items.map((item, idx) => `
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <div class="text-xs">
+                                <p class="font-bold text-slate-700">${item.codigo}</p>
+                                <p class="text-slate-500">${item.local}</p>
+                            </div>
+                            <button onclick="removeItem(${idx})" class="text-red-500 p-1">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                    lucide.createIcons();
+                    saveBtn.classList.toggle('hidden', items.length === 0);
+                }
+                
+                window.removeItem = (idx) => {
+                    items.splice(idx, 1);
+                    updateList();
+                };
+                
+                saveBtn.onclick = () => {
+                    const report = {
+                        id: generateId(),
+                        type: 'simples',
+                        agent: state.settings.agente,
+                        timestamp: Date.now(),
+                        data: { items }
+                    };
+                    state.reports.push(report);
+                    saveState();
+                    switchView('historico');
+                };
+            } else if (type === 'especial') {
+                renderSinistroForm(container);
+            }
+        }
+
+        function renderSinistroForm(container) {
+            let envolvidos = [];
+            let vitimas = [];
+            let apoioPolicial = { unidade: '', responsavel: '', registro: '' };
+            let socorroMedico = { unidade: '', responsavel: '', hospital: '' };
+            let photos = [];
+
+            function updateFormUI() {
+                container.innerHTML = `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow animate-slide-up">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold">Relatório de Sinistro</h3>
+                            <button onclick="renderOcorrenciaView(document.getElementById('app-content'))" class="text-slate-400">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        
+                        <form id="sinistro-form" class="space-y-8">
+                            <!-- Basic Info -->
+                            <section class="space-y-4">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">Informações Básicas</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-1">
+                                        <label class="text-xs font-semibold text-slate-500 uppercase">Data</label>
+                                        <input type="date" name="data" id="sin-data" value="${new Date().toISOString().split('T')[0]}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs font-semibold text-slate-500 uppercase">Hora</label>
+                                        <input type="time" name="hora" id="sin-hora" value="${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                    </div>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Endereço</label>
+                                    <input type="text" name="endereco" id="sin-endereco" placeholder="Rua, Número, Bairro" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Característica</label>
+                                    <select name="caracteristica" id="sin-caracteristica" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                        <option>Colisão Frontal</option>
+                                        <option>Colisão Traseira</option>
+                                        <option>Colisão Lateral</option>
+                                        <option>Atropelamento</option>
+                                        <option>Capotamento</option>
+                                        <option>Choque com Objeto Fixo</option>
+                                        <option>Outros</option>
+                                    </select>
+                                </div>
+                            </section>
+
+                            <!-- Envolvidos -->
+                            <section class="space-y-4">
+                                <div class="flex justify-between items-center border-b border-slate-100 pb-1">
+                                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Envolvidos</h4>
+                                    <button type="button" onclick="addEnvolvido()" class="text-blue-600 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                        <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
+                                    </button>
+                                </div>
+                                <div id="envolvidos-list" class="space-y-2">
+                                    ${envolvidos.map((e, i) => `
+                                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 relative">
+                                            <button type="button" onclick="removeEnvolvido(${i})" class="absolute top-2 right-2 text-red-500">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                            <p class="text-xs font-bold text-slate-700">${e.nome || 'Sem nome'}</p>
+                                            <p class="text-[10px] text-slate-500">${e.veiculo || 'Sem veículo'} | ${e.documento || 'Sem doc'}</p>
+                                        </div>
+                                    `).join('')}
+                                    ${envolvidos.length === 0 ? '<p class="text-[10px] text-slate-400 italic text-center py-2">Nenhum envolvido adicionado</p>' : ''}
+                                </div>
+                            </section>
+
+                            <!-- Vítimas -->
+                            <section class="space-y-4">
+                                <div class="flex justify-between items-center border-b border-slate-100 pb-1">
+                                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vítimas</h4>
+                                    <button type="button" onclick="addVitima()" class="text-red-600 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                        <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
+                                    </button>
+                                </div>
+                                <div id="vitimas-list" class="space-y-2">
+                                    ${vitimas.map((v, i) => `
+                                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 relative">
+                                            <button type="button" onclick="removeVitima(${i})" class="absolute top-2 right-2 text-red-500">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                            <p class="text-xs font-bold text-slate-700">${v.nome || 'Sem nome'}</p>
+                                            <p class="text-[10px] text-slate-500">Estado: ${v.estado}</p>
+                                        </div>
+                                    `).join('')}
+                                    ${vitimas.length === 0 ? '<p class="text-[10px] text-slate-400 italic text-center py-2">Nenhuma vítima registrada</p>' : ''}
+                                </div>
+                            </section>
+
+                            <!-- Apoio -->
+                            <section class="space-y-4">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">Apoio Externo</h4>
+                                <div class="space-y-4">
+                                    <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
+                                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Policial</p>
+                                        <input type="text" placeholder="Unidade (ex: 12º BPM)" id="apoio-pol-unidade" value="${apoioPolicial.unidade}" class="w-full p-2 bg-white border border-blue-100 rounded-lg text-xs outline-none">
+                                        <input type="text" placeholder="Responsável" id="apoio-pol-resp" value="${apoioPolicial.responsavel}" class="w-full p-2 bg-white border border-blue-100 rounded-lg text-xs outline-none">
+                                        <input type="text" placeholder="RO / BOPM" id="apoio-pol-reg" value="${apoioPolicial.registro}" class="w-full p-2 bg-white border border-blue-100 rounded-lg text-xs outline-none">
+                                    </div>
+                                    <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 space-y-3">
+                                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Médico</p>
+                                        <input type="text" placeholder="Unidade (ex: SAMU)" id="apoio-med-unidade" value="${socorroMedico.unidade}" class="w-full p-2 bg-white border border-red-100 rounded-lg text-xs outline-none">
+                                        <input type="text" placeholder="Responsável" id="apoio-med-resp" value="${socorroMedico.responsavel}" class="w-full p-2 bg-white border border-red-100 rounded-lg text-xs outline-none">
+                                        <input type="text" placeholder="Hospital de Destino" id="apoio-med-hosp" value="${socorroMedico.hospital}" class="w-full p-2 bg-white border border-red-100 rounded-lg text-xs outline-none">
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Resumo & Photos -->
+                            <section class="space-y-4">
+                                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">Resumo e Fotos</h4>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Narrativa</label>
+                                    <textarea name="resumo" id="sin-resumo" rows="4" placeholder="Descreva detalhadamente o ocorrido..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none resize-none"></textarea>
+                                </div>
+                                <div class="space-y-2">
+                                    <div id="photo-preview" class="grid grid-cols-3 gap-2">
+                                        ${photos.map((p, i) => `
+                                            <div class="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                                                <img src="${p}" class="w-full h-full object-cover">
+                                                <button type="button" onclick="removePhoto(${i})" class="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full shadow-lg">
+                                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                                </button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                                        <i data-lucide="camera" class="text-slate-400"></i>
+                                        <span class="text-[10px] text-slate-500 mt-1">Adicionar Fotos</span>
+                                        <input type="file" id="photo-input" multiple accept="image/*" class="hidden">
+                                    </label>
+                                </div>
+                            </section>
+
+                            <button type="submit" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-transform">
+                                FINALIZAR RELATÓRIO
+                            </button>
+                        </form>
+                    </div>
+                `;
+                lucide.createIcons();
+                setupFormEvents();
+            }
+
+            function setupFormEvents() {
+                const photoInput = document.getElementById('photo-input');
+                if (photoInput) {
+                    photoInput.onchange = (e) => {
+                        const files = Array.from(e.target.files);
+                        files.forEach(file => {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                                // Basic compression using canvas
+                                const img = new Image();
+                                img.src = ev.target.result;
+                                img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    const MAX_WIDTH = 800;
+                                    const scaleSize = MAX_WIDTH / img.width;
+                                    canvas.width = MAX_WIDTH;
+                                    canvas.height = img.height * scaleSize;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                    const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                                    photos.push(compressed);
+                                    updateFormUI();
+                                };
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    };
+                }
+
+                const form = document.getElementById('sinistro-form');
+                if (form) {
+                    form.onsubmit = (e) => {
+                        e.preventDefault();
+                        const activeKM = state.kmRecords.find(r => r.status === 'aberto');
+                        
+                        // Capture support data manually since they are not in the main form object
+                        apoioPolicial.unidade = document.getElementById('apoio-pol-unidade').value;
+                        apoioPolicial.responsavel = document.getElementById('apoio-pol-resp').value;
+                        apoioPolicial.registro = document.getElementById('apoio-pol-reg').value;
+                        
+                        socorroMedico.unidade = document.getElementById('apoio-med-unidade').value;
+                        socorroMedico.responsavel = document.getElementById('apoio-med-resp').value;
+                        socorroMedico.hospital = document.getElementById('apoio-med-hosp').value;
+
+                        const report = {
+                            id: generateId(),
+                            type: 'especial',
+                            agent: state.settings.agente,
+                            timestamp: Date.now(),
+                            data: {
+                                data: document.getElementById('sin-data').value,
+                                hora: document.getElementById('sin-hora').value,
+                                endereco: document.getElementById('sin-endereco').value,
+                                caracteristica: document.getElementById('sin-caracteristica').value,
+                                resumo: document.getElementById('sin-resumo').value,
+                                photos: photos,
+                                envolvidos: envolvidos,
+                                vitimas: vitimas,
+                                apoioPolicial: apoioPolicial,
+                                socorroMedico: socorroMedico,
+                                vtrs: activeKM ? [activeKM.vtr] : [state.settings.vtr],
+                                agentes: activeKM ? [activeKM.condutor, activeKM.apoio].filter(Boolean) : [state.settings.agente]
+                            }
+                        };
+                        state.reports.push(report);
+                        saveState();
+                        showToast('Relatório salvo com sucesso!');
+                        switchView('historico');
+                    };
+                }
+            }
+
+            // Expose helper functions to window for onclick handlers
+            window.addEnvolvido = () => {
+                showModal(`
+                    <h3 class="text-lg font-bold mb-4">Adicionar Envolvido</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="env-nome" placeholder="Nome Completo" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        <input type="text" id="env-doc" placeholder="CPF / RG / CNH" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        <input type="text" id="env-veiculo" placeholder="Veículo (Placa/Modelo)" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        <input type="tel" id="env-tel" placeholder="Telefone" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        <div class="flex gap-2">
+                            <button onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold">Cancelar</button>
+                            <button onclick="confirmAddEnvolvido()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Adicionar</button>
+                        </div>
+                    </div>
+                `);
+            };
+
+            window.confirmAddEnvolvido = () => {
+                const nome = document.getElementById('env-nome').value;
+                const documento = document.getElementById('env-doc').value;
+                const veiculo = document.getElementById('env-veiculo').value;
+                const telefone = document.getElementById('env-tel').value;
+                envolvidos.push({ nome, documento, veiculo, telefone });
+                closeModal();
+                updateFormUI();
+            };
+
+            window.removeEnvolvido = (i) => {
+                envolvidos.splice(i, 1);
+                updateFormUI();
+            };
+
+            window.addVitima = () => {
+                showModal(`
+                    <h3 class="text-lg font-bold mb-4">Registrar Vítima</h3>
+                    <div class="space-y-4">
+                        <input type="text" id="vit-nome" placeholder="Nome da Vítima" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        <select id="vit-estado" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                            <option>Leve</option>
+                            <option>Grave</option>
+                            <option>Fatal</option>
+                        </select>
+                        <div class="flex gap-2">
+                            <button onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold">Cancelar</button>
+                            <button onclick="confirmAddVitima()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold">Adicionar</button>
+                        </div>
+                    </div>
+                `);
+            };
+
+            window.confirmAddVitima = () => {
+                const nome = document.getElementById('vit-nome').value;
+                const estado = document.getElementById('vit-estado').value;
+                vitimas.push({ nome, estado });
+                closeModal();
+                updateFormUI();
+            };
+
+            window.removeVitima = (i) => {
+                vitimas.splice(i, 1);
+                updateFormUI();
+            };
+
+            window.removePhoto = (i) => {
+                photos.splice(i, 1);
+                updateFormUI();
+            };
+
+            updateFormUI();
+        }
+
+        // --- Historico View ---
+        function renderHistoricoView(container) {
+            const div = document.createElement('div');
+            div.className = 'animate-slide-up space-y-6';
+            
+            if (state.reports.length === 0) {
+                div.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                        <i data-lucide="clipboard-list" class="w-16 h-16 mb-4 opacity-20"></i>
+                        <p class="font-medium">Nenhum registro encontrado</p>
+                    </div>
+                `;
+            } else {
+                // Group by date
+                const grouped = state.reports.sort((a, b) => b.timestamp - a.timestamp).reduce((acc, report) => {
+                    const date = formatDate(report.timestamp);
+                    if (!acc[date]) acc[date] = [];
+                    acc[date].push(report);
+                    return acc;
+                }, {});
+                
+                Object.entries(grouped).forEach(([date, reports]) => {
+                    const dateSection = document.createElement('div');
+                    dateSection.className = 'space-y-3';
+                    dateSection.innerHTML = `<h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">${date}</h4>`;
+                    
+                    reports.forEach(report => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white p-4 rounded-2xl border border-slate-200 card-shadow flex gap-4 items-start';
+                        
+                        let icon = 'file-text';
+                        let color = 'blue';
+                        let title = '';
+                        let subtitle = '';
+                        
+                        if (report.type === 'log') {
+                            icon = 'clock';
+                            color = 'blue';
+                            title = report.data.codigo;
+                            subtitle = `${report.data.inicio} - ${report.data.termino} | ${report.data.local}`;
+                        } else if (report.type === 'simples') {
+                            icon = 'list';
+                            color = 'green';
+                            title = `${report.data.items.length} Itens Registrados`;
+                            subtitle = report.data.items.slice(0, 2).map(i => i.codigo.split(' ')[0]).join(', ') + (report.data.items.length > 2 ? '...' : '');
+                        } else if (report.type === 'especial') {
+                            icon = 'alert-triangle';
+                            color = 'red';
+                            title = report.data.caracteristica;
+                            subtitle = report.data.endereco;
+                        }
+                        
+                        card.innerHTML = `
+                            <div class="w-10 h-10 bg-${color}-100 text-${color}-600 rounded-xl flex items-center justify-center shrink-0">
+                                <i data-lucide="${icon}" class="w-5 h-5"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h5 class="font-bold text-slate-800 truncate">${title}</h5>
+                                    <span class="text-[10px] text-slate-400 font-medium">${formatTime(report.timestamp)}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 truncate">${subtitle}</p>
+                                <div class="flex gap-2 mt-3">
+                                    <button onclick="shareReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                                        <i data-lucide="share-2" class="w-3 h-3"></i> WhatsApp
+                                    </button>
+                                    <button onclick="deleteReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-3 py-1.5 rounded-lg">
+                                        Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        dateSection.appendChild(card);
+                    });
+                    div.appendChild(dateSection);
+                });
+            }
+            
+            container.appendChild(div);
+            lucide.createIcons();
+        }
+
+        function deleteReport(id) {
+            showModal(`
+                <div class="text-center space-y-4">
+                    <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                        <i data-lucide="trash-2" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Excluir Registro?</h3>
+                    <p class="text-sm text-slate-500">Esta ação não pode ser desfeita.</p>
+                    <div class="flex gap-2">
+                        <button onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold">Cancelar</button>
+                        <button onclick="confirmDeleteReport('${id}')" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold">Excluir</button>
+                    </div>
+                </div>
+            `);
+            lucide.createIcons();
+        }
+
+        window.confirmDeleteReport = (id) => {
+            state.reports = state.reports.filter(r => r.id !== id);
+            saveState();
+            closeModal();
+            showToast('Registro excluído');
+            render();
+        };
+
+        function shareReport(id) {
+            const report = state.reports.find(r => r.id === id);
+            let text = '';
+            
+            if (report.type === 'log') {
+                text = `*RELATÓRIO DE ATIVIDADE*\n\n` +
+                       `*Código:* ${report.data.codigo}\n` +
+                       `*Local:* ${report.data.local}\n` +
+                       `*Horário:* ${report.data.inicio} às ${report.data.termino}\n` +
+                       `*VTR:* ${report.data.vtr}\n` +
+                       `*Equipe:* ${report.data.condutor}${report.data.apoio ? ' / ' + report.data.apoio : ''}`;
+            } else if (report.type === 'simples') {
+                text = `*REGISTRO SIMPLES*\n\n` +
+                       report.data.items.map(i => `• ${i.codigo} - ${i.local}`).join('\n');
+            } else if (report.type === 'especial') {
+                text = `*RELATÓRIO DE SINISTRO*\n\n` +
+                       `*Data/Hora:* ${report.data.data} ${report.data.hora}\n` +
+                       `*Endereço:* ${report.data.endereco}\n` +
+                       `*Tipo:* ${report.data.caracteristica}\n` +
+                       `*Resumo:* ${report.data.resumo}\n\n`;
+
+                if (report.data.envolvidos && report.data.envolvidos.length > 0) {
+                    text += `*Envolvidos:*\n` + report.data.envolvidos.map(e => 
+                        `- ${e.nome || 'N/A'} (${e.veiculo || 'N/A'})`
+                    ).join('\n') + `\n\n`;
+                }
+
+                if (report.data.vitimas && report.data.vitimas.length > 0) {
+                    text += `*Vítimas:*\n` + report.data.vitimas.map(v => 
+                        `- ${v.nome || 'N/A'} (${v.estado})`
+                    ).join('\n') + `\n\n`;
+                }
+
+                if (report.data.apoioPolicial && report.data.apoioPolicial.unidade) {
+                    text += `*Apoio Policial:* ${report.data.apoioPolicial.unidade} - ${report.data.apoioPolicial.responsavel} (${report.data.apoioPolicial.registro})\n`;
+                }
+
+                if (report.data.socorroMedico && report.data.socorroMedico.unidade) {
+                    text += `*Socorro Médico:* ${report.data.socorroMedico.unidade} - ${report.data.socorroMedico.responsavel} -> ${report.data.socorroMedico.hospital}\n`;
+                }
+
+                text += `\n*VTR:* ${report.data.vtrs.join(', ')}\n` +
+                        `*Equipe:* ${report.data.agentes.join(' / ')}`;
+            }
+            
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        // --- Config View ---
+        function renderConfigView(container) {
+            const div = document.createElement('div');
+            div.className = 'animate-slide-up space-y-6';
+            
+            div.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="user" class="text-blue-600"></i>
+                        Perfil do Agente
+                    </h3>
+                    <form id="profile-form" class="space-y-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">Nome Padrão</label>
+                            <input type="text" name="agente" value="${state.settings.agente}" placeholder="Seu nome" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">VTR Padrão</label>
+                            <select name="vtr" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                                ${VTR_CODES.map(v => `<option value="${v}" ${v === state.settings.vtr ? 'selected' : ''}>${v}</option>`).join('')}
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl active:scale-[0.98] transition-transform">
+                            SALVAR PERFIL
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="database" class="text-slate-600"></i>
+                        Dados e Backup
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="exportData()" class="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 active:bg-slate-100">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="download" class="w-5 h-5 text-blue-600"></i>
+                                <span class="text-sm font-medium">Exportar Dados (JSON)</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                        </button>
+                        <button onclick="clearData()" class="w-full flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100 active:bg-red-100">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="trash-2" class="w-5 h-5 text-red-600"></i>
+                                <span class="text-sm font-medium text-red-600">Limpar Tudo</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-red-300"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center py-4">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Controle VTR v2.0</p>
+                    <p class="text-[10px] text-slate-300">Desenvolvido para Agentes de Trânsito</p>
+                </div>
+            `;
+            container.appendChild(div);
+            lucide.createIcons();
+            
+            document.getElementById('profile-form').onsubmit = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                state.settings.agente = formData.get('agente');
+                state.settings.vtr = formData.get('vtr');
+                saveState();
+                showToast('Perfil atualizado!');
+            };
+        }
+
+        function exportData() {
+            const data = JSON.stringify(state, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup-vtr-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast('Backup gerado!');
+        }
+
+        function clearData() {
+            showModal(`
+                <div class="text-center space-y-4">
+                    <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                        <i data-lucide="alert-octagon" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-lg font-bold">Limpar todos os dados?</h3>
+                    <p class="text-sm text-slate-500">Isso apagará permanentemente todo o seu histórico e configurações.</p>
+                    <div class="flex gap-2">
+                        <button onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold">Cancelar</button>
+                        <button onclick="confirmClearData()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold">Limpar</button>
+                    </div>
+                </div>
+            `);
+            lucide.createIcons();
+        }
+
+        window.confirmClearData = () => {
+            localStorage.clear();
+            location.reload();
+        };
+
+        // --- Toast System ---
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] bg-slate-800 text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl animate-slide-up';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, 20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        // --- Modal System ---
+        function showModal(content) {
+            const container = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = content;
+            container.classList.remove('hidden');
+            setTimeout(() => {
+                container.style.opacity = '1';
+                modalContent.style.transform = 'translateY(0)';
+            }, 10);
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            const container = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+            container.style.opacity = '0';
+            modalContent.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- Initialization ---
+        window.onload = () => {
+            render();
+            updateStatusBadge();
+            
+            // Close modal on outside click
+            document.getElementById('modal-container').onclick = (e) => {
+                if (e.target.id === 'modal-container') closeModal();
+            };
+        };
+    </script>
+</body>
+</html>
