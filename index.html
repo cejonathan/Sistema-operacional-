@@ -71,7 +71,7 @@
             <div class="bg-blue-600 p-1.5 rounded-lg">
                 <i data-lucide="shield" class="w-5 h-5 text-white"></i>
             </div>
-            <h1 class="font-bold text-lg tracking-tight">Controle VTR</h1>
+            <h1 class="font-bold text-lg tracking-tight">Controle Viatura</h1>
         </div>
         <div id="status-badge" class="hidden px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200">
             KM ABERTO
@@ -88,7 +88,7 @@
         <div class="max-w-md mx-auto flex justify-around items-center h-16">
             <button onclick="switchView('km')" id="nav-km" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="gauge" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium">KM</span>
+                <span class="text-[10px] font-medium">Viatura</span>
             </button>
             <button onclick="switchView('ocorrencia')" id="nav-ocorrencia" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="file-text" class="w-6 h-6"></i>
@@ -129,8 +129,8 @@
             "40 Fiscalização em ponto fixo", "41 Posturas", "42 Vistoria"
         ];
         const LOCAIS_DEFAULT = Array.from({ length: 15 }, (_, i) => `Setor ${i + 1}`);
-        const DET_CODES = ["02", "03", "06", "07", "08", "10", "12", "17", "18", "20", "22", "35", "41", "44", "46", "47", "49", "54", "59", "61", "62", "65", "68", "75", "86", "89"];
-        const VTR_CODES = ["AL 1389", "AL 1390", "AL 1393", "AL 1394", "AL 1395", "MH 01", "MH 02", "MH 03", "MH 04", "MH 05", "MH 06", "MH 07", "MH 08"];
+        const DET_CODES = ["DET 02", "DET 03", "DET 06", "DET 07", "DET 08", "DET 10", "DET 12", "DET 17", "DET 18", "DET 20", "DET 22", "DET 35", "DET 41", "DET 44", "DET 46", "DET 47", "DET 49", "DET 54", "DET 55", "DET 59", "DET 61", "DET 62", "DET 65", "DET 67", "DET 68", "DET 74", "DET 75", "DET 86", "DET 89", "DET 90"];
+        const VTR_CODES = ["AL 1389", "AL 1390", "AL 1391", "AL 1392", "AL 1393", "AL 1394", "AL 1395", "MH 01", "MH 02", "MH 03", "MH 04", "MH 05", "MH 06", "MH 07", "MH 08"];
 
         let state = {
             currentView: 'km',
@@ -215,18 +215,36 @@
                         </h2>
                         <form id="km-open-form" class="space-y-4">
                             <div class="space-y-1">
-                                <label class="text-xs font-semibold text-slate-500 uppercase">VTR</label>
-                                <select name="vtr" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                                    ${VTR_CODES.map(v => `<option value="${v}" ${v === state.settings.vtr ? 'selected' : ''}>${v}</option>`).join('')}
-                                </select>
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Viatura</label>
+                                <div class="space-y-2">
+                                    <select name="vtr_select" onchange="toggleManualInput(this, 'vtr_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                        ${VTR_CODES.map(v => `<option value="${v}" ${v === state.settings.vtr ? 'selected' : ''}>${v}</option>`).join('')}
+                                        <option value="MANUAL">OUTRO (Manual)</option>
+                                    </select>
+                                    <input type="text" id="vtr_manual" name="vtr_manual" placeholder="Digite a viatura" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Condutor</label>
-                                <input type="text" name="condutor" value="${state.settings.agente}" placeholder="Nome do condutor" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <div class="space-y-2">
+                                    <select name="condutor_select" onchange="toggleManualInput(this, 'condutor_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="">Selecione...</option>
+                                        ${DET_CODES.map(d => `<option value="${d}">${d}</option>`).join('')}
+                                        <option value="MANUAL">OUTRO (Manual)</option>
+                                    </select>
+                                    <input type="text" id="condutor_manual" name="condutor_manual" placeholder="Nome do condutor" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Apoio (Opcional)</label>
-                                <input type="text" name="apoio" placeholder="Nome do apoio" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <div class="space-y-2">
+                                    <select name="apoio_select" onchange="toggleManualInput(this, 'apoio_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="">Nenhum</option>
+                                        ${DET_CODES.map(d => `<option value="${d}">${d}</option>`).join('')}
+                                        <option value="MANUAL">OUTRO (Manual)</option>
+                                    </select>
+                                    <input type="text" id="apoio_manual" name="apoio_manual" placeholder="Nome do apoio" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1">
@@ -239,7 +257,7 @@
                                 </div>
                             </div>
                             <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform">
-                                INICIAR PLANTÃO
+                                ABRIR KM
                             </button>
                         </form>
                     </div>
@@ -249,11 +267,21 @@
                 document.getElementById('km-open-form').onsubmit = (e) => {
                     e.preventDefault();
                     const formData = new FormData(e.target);
+                    
+                    const vtr = formData.get('vtr_select') === 'MANUAL' ? formData.get('vtr_manual') : formData.get('vtr_select');
+                    const condutor = formData.get('condutor_select') === 'MANUAL' ? formData.get('condutor_manual') : formData.get('condutor_select');
+                    const apoio = formData.get('apoio_select') === 'MANUAL' ? formData.get('apoio_manual') : formData.get('apoio_select');
+
+                    if (!vtr || !condutor) {
+                        showToast('Viatura e Condutor são obrigatórios!', 'error');
+                        return;
+                    }
+
                     const newRecord = {
                         id: generateId(),
-                        vtr: formData.get('vtr'),
-                        condutor: formData.get('condutor'),
-                        apoio: formData.get('apoio'),
+                        vtr: vtr,
+                        condutor: condutor,
+                        apoio: apoio,
                         kmInicial: formData.get('kmInicial'),
                         horaInicial: formData.get('horaInicial'),
                         status: 'aberto',
@@ -330,6 +358,68 @@
                     saveState();
                     render();
                 };
+            }
+
+            // History Table
+            const historyDiv = document.createElement('div');
+            historyDiv.className = 'bg-white p-6 rounded-2xl border border-slate-200 card-shadow mt-6 overflow-x-auto';
+            
+            const records = [...state.kmRecords].reverse();
+            
+            if (records.length > 0) {
+                historyDiv.innerHTML = `
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="history" class="text-slate-600"></i>
+                        Histórico de Plantões
+                    </h3>
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
+                            <tr>
+                                <th class="p-2">Status</th>
+                                <th class="p-2">Viatura</th>
+                                <th class="p-2">Equipe</th>
+                                <th class="p-2">KM (I/F)</th>
+                                <th class="p-2">Hora (I/F)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${records.map(r => `
+                                <tr class="${r.status === 'aberto' ? 'bg-blue-50/50' : ''}">
+                                    <td class="p-2">
+                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${r.status === 'aberto' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}">
+                                            ${r.status}
+                                        </span>
+                                    </td>
+                                    <td class="p-2 font-medium">${r.vtr}</td>
+                                    <td class="p-2 text-slate-600">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
+                                    <td class="p-2 text-slate-600">${r.kmInicial} / ${r.kmFinal || '-'}</td>
+                                    <td class="p-2 text-slate-600">${r.horaInicial} / ${r.horaFinal || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                historyDiv.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 opacity-20"></i>
+                        <p>Nenhum histórico disponível</p>
+                    </div>
+                `;
+            }
+            container.appendChild(historyDiv);
+            lucide.createIcons();
+        }
+
+        function toggleManualInput(select, inputId) {
+            const input = document.getElementById(inputId);
+            if (select.value === 'MANUAL') {
+                input.classList.remove('hidden');
+                input.required = true;
+                input.focus();
+            } else {
+                input.classList.add('hidden');
+                input.required = false;
             }
         }
 
@@ -1002,7 +1092,7 @@
                             <input type="text" name="agente" value="${state.settings.agente}" placeholder="Seu nome" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-xs font-semibold text-slate-500 uppercase">VTR Padrão</label>
+                            <label class="text-xs font-semibold text-slate-500 uppercase">Viatura Padrão</label>
                             <select name="vtr" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
                                 ${VTR_CODES.map(v => `<option value="${v}" ${v === state.settings.vtr ? 'selected' : ''}>${v}</option>`).join('')}
                             </select>
