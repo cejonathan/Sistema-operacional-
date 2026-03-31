@@ -1,0 +1,5 @@
+{
+  "name": "Agente Trânsito",
+  "description": "Registro operacional para agentes de trânsito, incluindo controle de KM e ocorrências.",
+  "requestFramePermissions": ["camera"]
+}
