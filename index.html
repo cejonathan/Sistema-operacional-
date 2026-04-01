@@ -111,8 +111,8 @@
     </nav>
 
     <!-- Modals Container -->
-    <div id="modal-container" class="fixed inset-0 z-[60] hidden flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div id="modal-content" class="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl transform translate-y-full sm:translate-y-0 sm:scale-95 transition-transform duration-300">
+    <div id="modal-container" class="fixed inset-0 z-[60] hidden flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-all duration-300 opacity-0 overflow-y-auto">
+        <div id="modal-content" class="w-full max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 my-auto">
             <!-- Modal content injected here -->
         </div>
     </div>
@@ -239,7 +239,7 @@
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Condutor</label>
                                 <div class="space-y-2">
                                     <select name="condutor_select" onchange="toggleManualInput(this, 'condutor_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="" hidden>Selecionar</option>
+                                        <option value="" selected disabled>Selecionar</option>
                                         ${DET_CODES.map(d => `<option value="${d}">${d}</option>`).join('')}
                                         <option value="MANUAL">OUTRO (Escrever manualmente)</option>
                                     </select>
@@ -250,7 +250,7 @@
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Apoio (Opcional)</label>
                                 <div class="space-y-2">
                                     <select name="apoio_select" onchange="toggleManualInput(this, 'apoio_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="" hidden>Selecionar</option>
+                                        <option value="" selected disabled>Selecionar</option>
                                         ${DET_CODES.map(d => `<option value="${d}">${d}</option>`).join('')}
                                         <option value="MANUAL">OUTRO (Escrever manualmente)</option>
                                     </select>
@@ -1263,19 +1263,28 @@
             const container = document.getElementById('modal-container');
             const modalContent = document.getElementById('modal-content');
             modalContent.innerHTML = content;
+            
+            // Reset classes before showing
             container.classList.remove('hidden');
-            setTimeout(() => {
-                container.style.opacity = '1';
-                modalContent.style.transform = 'translateY(0)';
-            }, 10);
+            
+            // Force reflow
+            container.offsetHeight;
+            
+            container.style.opacity = '1';
+            modalContent.style.opacity = '1';
+            modalContent.style.transform = 'translateY(0) scale(1)';
+            
             lucide.createIcons();
         }
 
         function closeModal() {
             const container = document.getElementById('modal-container');
             const modalContent = document.getElementById('modal-content');
+            
             container.style.opacity = '0';
-            modalContent.style.transform = 'translateY(100%)';
+            modalContent.style.opacity = '0';
+            modalContent.style.transform = 'translateY(20px) scale(0.95)';
+            
             setTimeout(() => {
                 container.classList.add('hidden');
             }, 300);
