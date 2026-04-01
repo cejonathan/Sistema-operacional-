@@ -71,7 +71,12 @@
             <div class="bg-blue-600 p-1.5 rounded-lg">
                 <i data-lucide="shield" class="w-5 h-5 text-white"></i>
             </div>
-            <h1 class="font-bold text-lg tracking-tight">Controle Viatura</h1>
+            <div class="flex items-center gap-2">
+                <h1 id="header-title" class="font-bold text-lg tracking-tight">${state.settings.headerTitle || 'Agente de Trânsito'}</h1>
+                <button onclick="editHeaderTitle()" class="p-1 text-slate-400 hover:text-blue-600 transition-colors">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
         </div>
         <div id="status-badge" class="hidden px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200">
             KM ABERTO
@@ -92,15 +97,15 @@
             </button>
             <button onclick="switchView('ocorrencia')" id="nav-ocorrencia" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="file-text" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium">Ocorrência</span>
+                <span class="text-[10px] font-medium uppercase">Ocorrência</span>
             </button>
             <button onclick="switchView('historico')" id="nav-historico" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="history" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium">Histórico</span>
+                <span class="text-[10px] font-medium uppercase">Histórico</span>
             </button>
             <button onclick="switchView('config')" id="nav-config" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="settings" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium">Ajustes</span>
+                <span class="text-[10px] font-medium uppercase">Ajustes</span>
             </button>
         </div>
     </nav>
@@ -139,6 +144,7 @@
             settings: JSON.parse(localStorage.getItem('settings') || JSON.stringify({
                 agente: '',
                 vtr: VTR_CODES[0],
+                headerTitle: 'Agente de Trânsito',
                 codigos: CODIGOS_DEFAULT,
                 locais: LOCAIS_DEFAULT
             }))
@@ -188,6 +194,10 @@
             const content = document.getElementById('app-content');
             content.innerHTML = '';
             
+            // Update header title in case it changed
+            const headerTitle = document.getElementById('header-title');
+            if (headerTitle) headerTitle.textContent = state.settings.headerTitle || 'Agente de Trânsito';
+
             switch(state.currentView) {
                 case 'km': renderKMView(content); break;
                 case 'ocorrencia': renderOcorrenciaView(content); break;
@@ -220,7 +230,7 @@
                                     <select name="vtr_select" onchange="toggleManualInput(this, 'vtr_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                                         <option value="" hidden>Selecionar</option>
                                         ${VTR_CODES.map(v => `<option value="${v}" ${v === state.settings.vtr ? 'selected' : ''}>${v}</option>`).join('')}
-                                        <option value="MANUAL">OUTRO (Manual)</option>
+                                        <option value="MANUAL">OUTRO (Escrever manualmente)</option>
                                     </select>
                                     <input type="text" id="vtr_manual" name="vtr_manual" placeholder="Digite a viatura" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                                 </div>
@@ -229,22 +239,22 @@
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Condutor</label>
                                 <div class="space-y-2">
                                     <select name="condutor_select" onchange="toggleManualInput(this, 'condutor_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="">Selecionar</option>
+                                        <option value="" hidden>Selecionar</option>
                                         ${DET_CODES.map(d => `<option value="${d}">${d}</option>`).join('')}
-                                        <option value="MANUAL">OUTRO (Manual)</option>
+                                        <option value="MANUAL">OUTRO (Escrever manualmente)</option>
                                     </select>
-                                    <input type="text" id="condutor_manual" name="condutor_manual" placeholder="Nome do condutor" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <input type="text" id="condutor_manual" name="condutor_manual" placeholder="Digite condutor" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                                 </div>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Apoio (Opcional)</label>
                                 <div class="space-y-2">
                                     <select name="apoio_select" onchange="toggleManualInput(this, 'apoio_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                                        <option value="">Selecionar</option>
+                                        <option value="" hidden>Selecionar</option>
                                         ${DET_CODES.map(d => `<option value="${d}">${d}</option>`).join('')}
-                                        <option value="MANUAL">OUTRO (Manual)</option>
+                                        <option value="MANUAL">OUTRO (Escrever manualmente)</option>
                                     </select>
-                                    <input type="text" id="apoio_manual" name="apoio_manual" placeholder="Nome do apoio" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <input type="text" id="apoio_manual" name="apoio_manual" placeholder="Digite apoio" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
@@ -292,6 +302,9 @@
                     saveState();
                     render();
                 };
+
+                // History Table only in "Abrir KM" state
+                renderKMHistory(container);
             } else {
                 div.innerHTML = `
                     <div class="bg-blue-600 text-white p-6 rounded-2xl shadow-xl shadow-blue-200 relative overflow-hidden">
@@ -360,8 +373,9 @@
                     render();
                 };
             }
+        }
 
-            // History Table
+        function renderKMHistory(container) {
             const historyDiv = document.createElement('div');
             historyDiv.className = 'bg-white p-6 rounded-2xl border border-slate-200 card-shadow mt-6 overflow-x-auto';
             
@@ -369,9 +383,11 @@
             
             if (records.length > 0) {
                 historyDiv.innerHTML = `
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <i data-lucide="history" class="text-slate-600"></i>
-                        HISTÓRICO DE KM
+                    <h3 class="text-lg font-bold mb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="history" class="text-slate-600"></i>
+                            HISTÓRICO DE KM
+                        </div>
                     </h3>
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
@@ -381,6 +397,7 @@
                                 <th class="p-2">CONDUTOR / APOIO</th>
                                 <th class="p-2">KM (I/F)</th>
                                 <th class="p-2">Hora (I/F)</th>
+                                <th class="p-2">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -395,6 +412,11 @@
                                     <td class="p-2 text-slate-600">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
                                     <td class="p-2 text-slate-600">${r.kmInicial} / ${r.kmFinal || '-'}</td>
                                     <td class="p-2 text-slate-600">${r.horaInicial} / ${r.horaFinal || '-'}</td>
+                                    <td class="p-2">
+                                        <button onclick="editKM('${r.id}')" class="p-1.5 text-blue-600 bg-blue-50 rounded-lg">
+                                            <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -424,19 +446,35 @@
             }
         }
 
-        function editKM(id) {
+        window.editKM = (id) => {
             const record = state.kmRecords.find(r => r.id === id);
+            const isClosed = record.status === 'fechado';
+            
             showModal(`
-                <h2 class="text-xl font-bold mb-4">Editar KM</h2>
+                <h2 class="text-xl font-bold mb-4">Editar Registro</h2>
                 <form id="edit-km-form" class="space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold text-slate-500 uppercase">KM Inicial</label>
-                        <input type="number" name="kmInicial" value="${record.kmInicial}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">KM Inicial</label>
+                            <input type="number" name="kmInicial" value="${record.kmInicial}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">Hora Inicial</label>
+                            <input type="time" name="horaInicial" value="${record.horaInicial}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold text-slate-500 uppercase">Hora Inicial</label>
-                        <input type="time" name="horaInicial" value="${record.horaInicial}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    ${isClosed ? `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">KM Final</label>
+                            <input type="number" name="kmFinal" value="${record.kmFinal || ''}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">Hora Final</label>
+                            <input type="time" name="horaFinal" value="${record.horaFinal || ''}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        </div>
                     </div>
+                    ` : ''}
                     <div class="flex gap-2">
                         <button type="button" onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold">Cancelar</button>
                         <button type="submit" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Salvar</button>
@@ -449,11 +487,36 @@
                 const formData = new FormData(e.target);
                 record.kmInicial = formData.get('kmInicial');
                 record.horaInicial = formData.get('horaInicial');
+                if (isClosed) {
+                    record.kmFinal = formData.get('kmFinal');
+                    record.horaFinal = formData.get('horaFinal');
+                }
                 saveState();
                 closeModal();
                 render();
             };
         }
+
+        window.editHeaderTitle = () => {
+            showModal(`
+                <h2 class="text-xl font-bold mb-4">Personalizar Título</h2>
+                <div class="space-y-4">
+                    <input type="text" id="new-header-title" value="${state.settings.headerTitle || 'Agente de Trânsito'}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    <div class="flex gap-2">
+                        <button onclick="closeModal()" class="flex-1 py-3 border border-slate-200 rounded-xl font-bold">Cancelar</button>
+                        <button onclick="confirmHeaderTitle()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Salvar</button>
+                    </div>
+                </div>
+            `);
+        };
+
+        window.confirmHeaderTitle = () => {
+            const newTitle = document.getElementById('new-header-title').value;
+            state.settings.headerTitle = newTitle || 'Agente de Trânsito';
+            saveState();
+            closeModal();
+            render();
+        };
 
         // --- Ocorrencia View ---
         function renderOcorrenciaView(container) {
@@ -1083,7 +1146,7 @@
             
             div.innerHTML = `
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 uppercase">
                         <i data-lucide="user" class="text-blue-600"></i>
                         Perfil do Agente
                     </h3>
@@ -1098,14 +1161,14 @@
                                 ${VTR_CODES.map(v => `<option value="${v}" ${v === state.settings.vtr ? 'selected' : ''}>${v}</option>`).join('')}
                             </select>
                         </div>
-                        <button type="submit" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl active:scale-[0.98] transition-transform">
+                        <button type="submit" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl active:scale-[0.98] transition-transform uppercase">
                             SALVAR PERFIL
                         </button>
                     </form>
                 </div>
 
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 uppercase">
                         <i data-lucide="database" class="text-slate-600"></i>
                         Dados e Backup
                     </h3>
@@ -1113,14 +1176,14 @@
                         <button onclick="exportData()" class="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 active:bg-slate-100">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="download" class="w-5 h-5 text-blue-600"></i>
-                                <span class="text-sm font-medium">Exportar Dados (JSON)</span>
+                                <span class="text-sm font-medium uppercase">Exportar Dados (JSON)</span>
                             </div>
                             <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
                         </button>
                         <button onclick="clearData()" class="w-full flex items-center justify-between p-4 bg-red-50 rounded-xl border border-red-100 active:bg-red-100">
                             <div class="flex items-center gap-3">
                                 <i data-lucide="trash-2" class="w-5 h-5 text-red-600"></i>
-                                <span class="text-sm font-medium text-red-600">Limpar Tudo</span>
+                                <span class="text-sm font-medium text-red-600 uppercase">Limpar Tudo</span>
                             </div>
                             <i data-lucide="chevron-right" class="w-4 h-4 text-red-300"></i>
                         </button>
@@ -1128,8 +1191,8 @@
                 </div>
 
                 <div class="text-center py-4">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Controle Viatura v2.0</p>
-                    <p class="text-[10px] text-slate-300">Desenvolvido para Agentes de Trânsito</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Agente de Trânsito v2.0</p>
+                    <p class="text-[10px] text-slate-300 uppercase">Desenvolvido para Agentes de Trânsito</p>
                 </div>
             `;
             container.appendChild(div);
