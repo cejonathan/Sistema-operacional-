@@ -93,19 +93,23 @@
         <div class="max-w-md mx-auto flex justify-around items-center h-16">
             <button onclick="switchView('km')" id="nav-km" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="gauge" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium">VIATURA</span>
+                <span class="text-[10px] font-medium uppercase tracking-tighter">Viatura 1</span>
+            </button>
+            <button onclick="switchView('km2')" id="nav-km2" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
+                <i data-lucide="gauge" class="w-6 h-6"></i>
+                <span class="text-[10px] font-medium uppercase tracking-tighter">Viatura 2</span>
             </button>
             <button onclick="switchView('ocorrencia')" id="nav-ocorrencia" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="file-text" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium uppercase">Ocorrência</span>
+                <span class="text-[10px] font-medium uppercase tracking-tighter">Ocorrência</span>
             </button>
             <button onclick="switchView('historico')" id="nav-historico" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="history" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium uppercase">Histórico</span>
+                <span class="text-[10px] font-medium uppercase tracking-tighter">Histórico</span>
             </button>
             <button onclick="switchView('config')" id="nav-config" class="flex flex-col items-center gap-1 text-slate-500 transition-colors">
                 <i data-lucide="settings" class="w-6 h-6"></i>
-                <span class="text-[10px] font-medium uppercase">Ajustes</span>
+                <span class="text-[10px] font-medium uppercase tracking-tighter">Ajustes</span>
             </button>
         </div>
     </nav>
@@ -140,6 +144,7 @@
         let state = {
             currentView: 'km',
             kmRecords: JSON.parse(localStorage.getItem('kmRecords') || '[]'),
+            kmRecords2: JSON.parse(localStorage.getItem('kmRecords2') || '[]'),
             reports: JSON.parse(localStorage.getItem('reports') || '[]'),
             settings: JSON.parse(localStorage.getItem('settings') || JSON.stringify({
                 agente: '',
@@ -153,15 +158,17 @@
         // --- Utilities ---
         function saveState() {
             localStorage.setItem('kmRecords', JSON.stringify(state.kmRecords));
+            localStorage.setItem('kmRecords2', JSON.stringify(state.kmRecords2));
             localStorage.setItem('reports', JSON.stringify(state.reports));
             localStorage.setItem('settings', JSON.stringify(state.settings));
             updateStatusBadge();
         }
 
         function updateStatusBadge() {
-            const activeKM = state.kmRecords.find(r => r.status === 'aberto');
+            const activeKM1 = state.kmRecords.find(r => r.status === 'aberto');
+            const activeKM2 = state.kmRecords2.find(r => r.status === 'aberto');
             const badge = document.getElementById('status-badge');
-            if (activeKM) {
+            if (activeKM1 || activeKM2) {
                 badge.classList.remove('hidden');
             } else {
                 badge.classList.add('hidden');
@@ -199,7 +206,8 @@
             if (headerTitle) headerTitle.textContent = state.settings.headerTitle || 'Agente de Trânsito';
 
             switch(state.currentView) {
-                case 'km': renderKMView(content); break;
+                case 'km': renderKMView(content, 'kmRecords'); break;
+                case 'km2': renderKMView(content, 'kmRecords2'); break;
                 case 'ocorrencia': renderOcorrenciaView(content); break;
                 case 'historico': renderHistoricoView(content); break;
                 case 'config': renderConfigView(content); break;
@@ -210,8 +218,8 @@
         }
 
         // --- KM View ---
-        function renderKMView(container) {
-            const activeRecord = state.kmRecords.find(r => r.status === 'aberto');
+        function renderKMView(container, recordsKey) {
+            const activeRecord = state[recordsKey].find(r => r.status === 'aberto');
             
             const div = document.createElement('div');
             div.className = 'animate-slide-up space-y-4';
@@ -221,7 +229,7 @@
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
                         <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
                             <i data-lucide="play-circle" class="text-blue-600"></i>
-                            ABRIR KM
+                            ABRIR KM ${recordsKey === 'kmRecords2' ? '2' : ''}
                         </h2>
                         <form id="km-open-form" class="space-y-4">
                             <div class="space-y-1">
@@ -303,13 +311,13 @@
                         status: 'aberto',
                         timestamp: new Date().toISOString()
                     };
-                    state.kmRecords.push(newRecord);
+                    state[recordsKey].push(newRecord);
                     saveState();
                     render();
                 };
 
                 // History Table only in "Abrir KM" state
-                renderKMHistory(container);
+                renderKMHistory(container, recordsKey);
             } else {
                 div.innerHTML = `
                     <div class="bg-blue-600 text-white p-6 rounded-2xl shadow-xl shadow-blue-200 relative overflow-hidden">
@@ -322,7 +330,7 @@
                                     <p class="text-blue-100 text-xs font-bold uppercase tracking-widest">Em Serviço</p>
                                     <h3 class="text-2xl font-black">${activeRecord.vtr}</h3>
                                 </div>
-                                <button onclick="editKM('${activeRecord.id}')" class="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-colors">
+                                <button onclick="editKM('${activeRecord.id}', '${recordsKey}')" class="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-colors">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
                                     <span class="text-[10px] font-bold uppercase">Editar</span>
                                 </button>
@@ -371,7 +379,7 @@
                 document.getElementById('km-close-form').onsubmit = (e) => {
                     e.preventDefault();
                     const formData = new FormData(e.target);
-                    const record = state.kmRecords.find(r => r.id === activeRecord.id);
+                    const record = state[recordsKey].find(r => r.id === activeRecord.id);
                     record.kmFinal = formData.get('kmFinal');
                     record.horaFinal = formData.get('horaFinal');
                     record.status = 'fechado';
@@ -381,11 +389,11 @@
             }
         }
 
-        function renderKMHistory(container) {
+        function renderKMHistory(container, recordsKey) {
             const historyDiv = document.createElement('div');
             historyDiv.className = 'bg-white p-6 rounded-2xl border border-slate-200 card-shadow mt-6 overflow-x-auto';
             
-            const records = [...state.kmRecords].reverse();
+            const records = [...state[recordsKey]].reverse();
             
             if (records.length > 0) {
                 historyDiv.innerHTML = `
@@ -417,7 +425,7 @@
                                     <td class="p-2 text-slate-600">${r.kmInicial} / ${r.kmFinal || '-'}</td>
                                     <td class="p-2 text-slate-600">${r.horaInicial} / ${r.horaFinal || '-'}</td>
                                     <td class="p-2">
-                                        <button onclick="editKM('${r.id}')" class="flex items-center gap-1.5 px-2 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                        <button onclick="editKM('${r.id}', '${recordsKey}')" class="flex items-center gap-1.5 px-2 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                                             <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                                             <span class="text-[10px] font-bold uppercase">Editar</span>
                                         </button>
@@ -452,8 +460,8 @@
         }
 
         // --- KM Actions ---
-        function editKM(id) {
-            const record = state.kmRecords.find(r => r.id === id);
+        function editKM(id, recordsKey = 'kmRecords') {
+            const record = state[recordsKey].find(r => r.id === id);
             if (!record) return;
             const isClosed = record.status === 'fechado';
             
@@ -567,7 +575,7 @@
             const container = document.getElementById('ocorrencia-form-container');
             container.innerHTML = '';
             
-            const activeKM = state.kmRecords.find(r => r.status === 'aberto');
+            const activeKM = state.kmRecords.find(r => r.status === 'aberto') || state.kmRecords2.find(r => r.status === 'aberto');
             
             if (type === 'log') {
                 container.innerHTML = `
@@ -1005,7 +1013,7 @@
                 div.innerHTML = `
                     <div class="flex flex-col items-center justify-center py-20 text-slate-400">
                         <i data-lucide="clipboard-list" class="w-16 h-16 mb-4 opacity-20"></i>
-                        <p class="font-medium">Nenhum registro encontrado</p>
+                        <p class="font-medium uppercase text-[10px]">Nenhum registro encontrado</p>
                     </div>
                 `;
             } else {
