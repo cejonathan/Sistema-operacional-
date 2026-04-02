@@ -247,7 +247,7 @@
                                 </div>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-xs font-semibold text-slate-500 uppercase">Apoio (Opcional)</label>
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Apoio</label>
                                 <div class="space-y-2">
                                     <select name="apoio_select" onchange="toggleManualInput(this, 'apoio_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                                         <option value="" selected disabled>Selecionar</option>
@@ -256,6 +256,10 @@
                                     </select>
                                     <input type="text" id="apoio_manual" name="apoio_manual" placeholder="Digite apoio" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                                 </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-500 uppercase">Data</label>
+                                <input type="date" name="data" value="${new Date().toISOString().split('T')[0]}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-1">
@@ -293,6 +297,7 @@
                         vtr: vtr,
                         condutor: condutor,
                         apoio: apoio,
+                        data: formData.get('data'),
                         kmInicial: formData.get('kmInicial'),
                         horaInicial: formData.get('horaInicial'),
                         status: 'aberto',
@@ -317,8 +322,9 @@
                                     <p class="text-blue-100 text-xs font-bold uppercase tracking-widest">Em Serviço</p>
                                     <h3 class="text-2xl font-black">${activeRecord.vtr}</h3>
                                 </div>
-                                <button onclick="editKM('${activeRecord.id}')" class="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                <button onclick="editKM('${activeRecord.id}')" class="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-colors">
                                     <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                    <span class="text-[10px] font-bold uppercase">Editar</span>
                                 </button>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
@@ -392,7 +398,7 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
                             <tr>
-                                <th class="p-2">Status</th>
+                                <th class="p-2">Data</th>
                                 <th class="p-2">Viatura</th>
                                 <th class="p-2">CONDUTOR / APOIO</th>
                                 <th class="p-2">KM (I/F)</th>
@@ -403,18 +409,17 @@
                         <tbody class="divide-y divide-slate-100">
                             ${records.map(r => `
                                 <tr class="${r.status === 'aberto' ? 'bg-blue-50/50' : ''}">
-                                    <td class="p-2">
-                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase ${r.status === 'aberto' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}">
-                                            ${r.status}
-                                        </span>
+                                    <td class="p-2 text-slate-600 font-medium">
+                                        ${r.data ? r.data.split('-').reverse().join('/') : '-'}
                                     </td>
                                     <td class="p-2 font-medium">${r.vtr}</td>
                                     <td class="p-2 text-slate-600">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
                                     <td class="p-2 text-slate-600">${r.kmInicial} / ${r.kmFinal || '-'}</td>
                                     <td class="p-2 text-slate-600">${r.horaInicial} / ${r.horaFinal || '-'}</td>
                                     <td class="p-2">
-                                        <button onclick="editKM('${r.id}')" class="p-1.5 text-blue-600 bg-blue-50 rounded-lg">
+                                        <button onclick="editKM('${r.id}')" class="flex items-center gap-1.5 px-2 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                                             <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                            <span class="text-[10px] font-bold uppercase">Editar</span>
                                         </button>
                                     </td>
                                 </tr>
@@ -455,6 +460,10 @@
             showModal(`
                 <h2 class="text-xl font-bold mb-4 uppercase">Editar Registro</h2>
                 <form id="edit-km-form" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-500 uppercase">Data</label>
+                        <input type="date" name="data" value="${record.data || ''}" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">KM Inicial</label>
@@ -487,6 +496,7 @@
             document.getElementById('edit-km-form').onsubmit = (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
+                record.data = formData.get('data');
                 record.kmInicial = formData.get('kmInicial');
                 record.horaInicial = formData.get('horaInicial');
                 if (isClosed) {
