@@ -524,18 +524,18 @@
                         <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
                             <tr>
                                 ${recordsKey === 'kmRecords2' ? `
-                                    <th class="p-2">Viatura</th>
-                                    <th class="p-2">Condutor</th>
+                                    <th class="p-2">Data</th>
+                                    <th class="p-2">Hora</th>
                                     <th class="p-2">Código</th>
                                     <th class="p-2">Local</th>
-                                    <th class="p-2">Hora</th>
-                                    <th class="p-2">Data</th>
-                                ` : `
+                                    <th class="p-2">Condutor / Apoio</th>
                                     <th class="p-2">Viatura</th>
-                                    <th class="p-2">KM</th>
-                                    <th class="p-2">Condutor</th>
-                                    <th class="p-2">Hora</th>
+                                ` : `
                                     <th class="p-2">Data</th>
+                                    <th class="p-2">Hora</th>
+                                    <th class="p-2">KM</th>
+                                    <th class="p-2">Condutor / Apoio</th>
+                                    <th class="p-2">Viatura</th>
                                 `}
                                 <th class="p-2 text-center">Ação</th>
                             </tr>
@@ -544,18 +544,18 @@
                             ${records.map(r => `
                                 <tr class="${r.status === 'aberto' ? 'bg-blue-50/50' : ''}">
                                     ${recordsKey === 'kmRecords2' ? `
-                                        <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
-                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
+                                        <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
                                         <td class="p-2 text-[10px] text-slate-500 uppercase">${r.codigo || '-'}</td>
                                         <td class="p-2 text-slate-600">${r.local || '-'}</td>
-                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
-                                        <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
-                                    ` : `
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
                                         <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
+                                    ` : `
+                                        <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
                                         <td class="p-2 text-slate-600 whitespace-nowrap">${r.kmInicial} / ${r.kmFinal || '-'}</td>
                                         <td class="p-2 text-slate-600 whitespace-nowrap">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
-                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
-                                        <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
+                                        <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
                                     `}
                                     <td class="p-2 text-center">
                                         ${isEditable(r.timestamp) ? `
