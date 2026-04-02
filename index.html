@@ -32,7 +32,7 @@
         }
 
         .nav-active {
-            color: #2563eb;
+            color: #059669;
         }
 
         .nav-active i {
@@ -68,12 +68,12 @@
     <!-- Header -->
     <header class="w-full glass border-b border-slate-200 px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-2">
-            <div class="bg-blue-600 p-1.5 rounded-lg">
+            <div class="bg-emerald-600 p-1.5 rounded-lg">
                 <i data-lucide="shield" class="w-5 h-5 text-white"></i>
             </div>
             <div class="flex items-center gap-2">
                 <h1 id="header-title" class="font-bold text-lg tracking-tight">${state.settings.headerTitle || 'Agente de Trânsito'}</h1>
-                <button onclick="editHeaderTitle()" class="p-1 text-slate-400 hover:text-blue-600 transition-colors">
+                <button onclick="editHeaderTitle()" class="p-1 text-slate-400 hover:text-emerald-600 transition-colors">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                 </button>
             </div>
@@ -260,74 +260,74 @@
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Viatura</label>
                             <div class="space-y-2">
-                                <select name="vtr_select" onchange="toggleManualInput(this, 'vtr_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <select name="vtr_select" onchange="toggleManualInput(this, 'vtr_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                                     <option value="" ${!defaultVtr ? 'selected' : ''} disabled>Selecionar</option>
                                     ${VTR_CODES.map(v => `<option value="${v}" ${v === defaultVtr ? 'selected' : ''}>${v}</option>`).join('')}
                                     <option value="MANUAL" ${defaultVtr && !VTR_CODES.includes(defaultVtr) ? 'selected' : ''}>OUTRO (Escrever manualmente)</option>
                                 </select>
-                                <input type="text" id="vtr_manual" name="vtr_manual" value="${defaultVtr && !VTR_CODES.includes(defaultVtr) ? defaultVtr : ''}" placeholder="Digite a viatura" class="${defaultVtr && !VTR_CODES.includes(defaultVtr) ? '' : 'hidden'} w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="text" id="vtr_manual" name="vtr_manual" value="${defaultVtr && !VTR_CODES.includes(defaultVtr) ? defaultVtr : ''}" placeholder="Digite a viatura" class="${defaultVtr && !VTR_CODES.includes(defaultVtr) ? '' : 'hidden'} w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Condutor</label>
                             <div class="space-y-2">
-                                <select name="condutor_select" onchange="toggleManualInput(this, 'condutor_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <select name="condutor_select" onchange="toggleManualInput(this, 'condutor_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                                     <option value="" ${!defaultCondutor ? 'selected' : ''} disabled>Selecionar</option>
                                     ${DET_CODES.map(d => `<option value="${d}" ${d === defaultCondutor ? 'selected' : ''}>${d}</option>`).join('')}
                                     <option value="MANUAL" ${defaultCondutor && !DET_CODES.includes(defaultCondutor) ? 'selected' : ''}>OUTRO (Escrever manualmente)</option>
                                 </select>
-                                <input type="text" id="condutor_manual" name="condutor_manual" value="${defaultCondutor && !DET_CODES.includes(defaultCondutor) ? defaultCondutor : ''}" placeholder="Digite condutor" class="${defaultCondutor && !DET_CODES.includes(defaultCondutor) ? '' : 'hidden'} w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="text" id="condutor_manual" name="condutor_manual" value="${defaultCondutor && !DET_CODES.includes(defaultCondutor) ? defaultCondutor : ''}" placeholder="Digite condutor" class="${defaultCondutor && !DET_CODES.includes(defaultCondutor) ? '' : 'hidden'} w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Apoio</label>
                             <div class="space-y-2">
-                                <select name="apoio_select" onchange="toggleManualInput(this, 'apoio_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <select name="apoio_select" onchange="toggleManualInput(this, 'apoio_manual')" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                                     <option value="" ${!defaultApoio ? 'selected' : ''} disabled>Selecionar</option>
                                     ${DET_CODES.map(d => `<option value="${d}" ${d === defaultApoio ? 'selected' : ''}>${d}</option>`).join('')}
                                     <option value="MANUAL" ${defaultApoio && !DET_CODES.includes(defaultApoio) ? 'selected' : ''}>OUTRO (Escrever manualmente)</option>
                                 </select>
-                                <input type="text" id="apoio_manual" name="apoio_manual" value="${defaultApoio && !DET_CODES.includes(defaultApoio) ? defaultApoio : ''}" placeholder="Digite apoio" class="${defaultApoio && !DET_CODES.includes(defaultApoio) ? '' : 'hidden'} w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="text" id="apoio_manual" name="apoio_manual" value="${defaultApoio && !DET_CODES.includes(defaultApoio) ? defaultApoio : ''}" placeholder="Digite apoio" class="${defaultApoio && !DET_CODES.includes(defaultApoio) ? '' : 'hidden'} w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
                         ${isTestView ? `
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Código</label>
                             <div class="space-y-2">
-                                <select name="codigo_select" onchange="toggleManualInput(this, 'codigo_manual')" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <select name="codigo_select" onchange="toggleManualInput(this, 'codigo_manual')" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                                     <option value="" selected disabled>Selecionar Código</option>
                                     ${state.settings.codigos.map(c => `<option value="${c}">${c}</option>`).join('')}
                                     <option value="MANUAL">Outros (Escrever manualmente)</option>
                                 </select>
-                                <input type="text" id="codigo_manual" name="codigo_manual" placeholder="Digite o código" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="text" id="codigo_manual" name="codigo_manual" placeholder="Digite o código" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Local</label>
                             <div class="space-y-2">
-                                <select name="local_select" onchange="toggleManualInput(this, 'local_manual')" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <select name="local_select" onchange="toggleManualInput(this, 'local_manual')" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                                     <option value="" selected disabled>Selecionar Local</option>
                                     ${state.settings.locais.map(l => `<option value="${l}">${l}</option>`).join('')}
                                     <option value="MANUAL">Outros (Escrever manualmente)</option>
                                 </select>
-                                <input type="text" id="local_manual" name="local_manual" placeholder="Digite o local" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="text" id="local_manual" name="local_manual" placeholder="Digite o local" class="hidden w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
                         ` : ''}
                         <div class="space-y-1">
                             <label class="text-xs font-semibold text-slate-500 uppercase">Data</label>
-                            <input type="date" name="data" value="${new Date().toISOString().split('T')[0]}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                            <input type="date" name="data" value="${new Date().toISOString().split('T')[0]}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             ${!isTestView ? `
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-500 uppercase">KM Inicial</label>
-                                <input type="number" name="kmInicial" placeholder="00000" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="number" name="kmInicial" placeholder="00000" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                             ` : ''}
                             <div class="space-y-1 ${isTestView ? 'col-span-2' : ''}">
                                 <label class="text-xs font-semibold text-slate-500 uppercase">Hora Inicial</label>
-                                <input type="time" name="horaInicial" value="${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="time" name="horaInicial" value="${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
                         <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform uppercase">
@@ -394,18 +394,18 @@
                 const activeDiv = document.createElement('div');
                 activeDiv.className = 'space-y-4';
                 activeDiv.innerHTML = `
-                    <div class="bg-blue-600 text-white p-6 rounded-2xl shadow-xl shadow-blue-200 relative overflow-hidden">
+                    <div class="bg-emerald-600 text-white p-6 rounded-2xl shadow-xl shadow-emerald-200 relative overflow-hidden">
                         <div class="absolute -right-4 -top-4 opacity-10">
                             <i data-lucide="${isTestView ? 'clipboard-check' : 'gauge'}" class="w-32 h-32"></i>
                         </div>
                         <div class="relative z-10">
                             <div class="flex justify-between items-start mb-6">
                                 <div>
-                                    <p class="text-blue-100 text-xs font-bold uppercase tracking-widest">${isTestView ? 'Ocorrência Ativa' : 'Em Serviço'}</p>
+                                    <p class="text-emerald-100 text-xs font-bold uppercase tracking-widest">${isTestView ? 'Ocorrência Ativa' : 'Em Serviço'}</p>
                                     <h3 class="text-2xl font-black">${record.vtr}</h3>
                                     <div class="flex flex-wrap gap-2 mt-1">
-                                        ${record.codigo ? `<p class="text-blue-100 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded">${record.codigo}</p>` : ''}
-                                        ${record.local ? `<p class="text-blue-100 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded">${record.local}</p>` : ''}
+                                        ${record.codigo ? `<p class="text-emerald-100 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded">${record.codigo}</p>` : ''}
+                                        ${record.local ? `<p class="text-emerald-100 text-[10px] font-bold uppercase bg-white/10 px-2 py-0.5 rounded">${record.local}</p>` : ''}
                                     </div>
                                 </div>
                                 <button onclick="editKM('${record.id}', '${recordsKey}')" class="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-colors">
@@ -416,17 +416,17 @@
                             <div class="grid grid-cols-2 gap-4">
                                 ${!isTestView ? `
                                 <div class="bg-white/10 p-3 rounded-xl">
-                                    <p class="text-blue-100 text-[10px] uppercase font-bold">KM Inicial</p>
+                                    <p class="text-emerald-100 text-[10px] uppercase font-bold">KM Inicial</p>
                                     <p class="text-xl font-bold">${record.kmInicial}</p>
                                 </div>
                                 ` : ''}
                                 <div class="bg-white/10 p-3 rounded-xl ${isTestView ? 'col-span-2' : ''}">
-                                    <p class="text-blue-100 text-[10px] uppercase font-bold">Hora Início</p>
+                                    <p class="text-emerald-100 text-[10px] uppercase font-bold">Hora Início</p>
                                     <p class="text-xl font-bold">${record.horaInicial}</p>
                                 </div>
                             </div>
                             <div class="mt-4 pt-4 border-t border-white/10">
-                                <p class="text-blue-100 text-[10px] uppercase font-bold">CONDUTOR / APOIO</p>
+                                <p class="text-emerald-100 text-[10px] uppercase font-bold">CONDUTOR / APOIO</p>
                                 <p class="font-medium">${record.condutor}${record.apoio ? ' / ' + record.apoio : ''}</p>
                             </div>
 
@@ -531,18 +531,18 @@
                                     <th class="p-2">Condutor / Apoio</th>
                                     <th class="p-2">Viatura</th>
                                 ` : `
+                                    <th class="p-2">Viatura</th>
                                     <th class="p-2">Data</th>
                                     <th class="p-2">Hora</th>
                                     <th class="p-2">KM</th>
                                     <th class="p-2">Condutor / Apoio</th>
-                                    <th class="p-2">Viatura</th>
                                 `}
                                 <th class="p-2 text-center">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             ${records.map(r => `
-                                <tr class="${r.status === 'aberto' ? 'bg-blue-50/50' : ''}">
+                                <tr class="${r.status === 'aberto' ? 'bg-emerald-50/50' : ''}">
                                     ${recordsKey === 'kmRecords2' ? `
                                         <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
                                         <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
@@ -551,15 +551,15 @@
                                         <td class="p-2 text-slate-600 whitespace-nowrap">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
                                         <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
                                     ` : `
+                                        <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
                                         <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
                                         <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
                                         <td class="p-2 text-slate-600 whitespace-nowrap">${r.kmInicial} / ${r.kmFinal || '-'}</td>
                                         <td class="p-2 text-slate-600 whitespace-nowrap">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
-                                        <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
                                     `}
                                     <td class="p-2 text-center">
                                         ${isEditable(r.timestamp) ? `
-                                        <button onclick="editKM('${r.id}', '${recordsKey}')" class="inline-flex items-center gap-1.5 px-2 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                        <button onclick="editKM('${r.id}', '${recordsKey}')" class="inline-flex items-center gap-1.5 px-2 py-1.5 text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
                                             <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                                             <span class="text-[10px] font-bold uppercase">Editar</span>
                                         </button>
@@ -726,7 +726,7 @@
             div.innerHTML = `
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="renderOcorrenciaForm('log')" class="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-slate-200 card-shadow active:bg-slate-50">
-                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
                             <i data-lucide="clock"></i>
                         </div>
                         <span class="text-[10px] font-bold uppercase">Log</span>
@@ -989,11 +989,11 @@
                             <section class="space-y-4">
                                 <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1">Apoio Externo</h4>
                                 <div class="space-y-4">
-                                    <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-100 space-y-3">
-                                        <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Policial</p>
-                                        <input type="text" placeholder="Unidade (ex: 12º BPM)" id="apoio-pol-unidade" value="${apoioPolicial.unidade}" class="w-full p-2 bg-white border border-blue-100 rounded-lg text-xs outline-none">
-                                        <input type="text" placeholder="Responsável" id="apoio-pol-resp" value="${apoioPolicial.responsavel}" class="w-full p-2 bg-white border border-blue-100 rounded-lg text-xs outline-none">
-                                        <input type="text" placeholder="RO / BOPM" id="apoio-pol-reg" value="${apoioPolicial.registro}" class="w-full p-2 bg-white border border-blue-100 rounded-lg text-xs outline-none">
+                                    <div class="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-3">
+                                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Policial</p>
+                                        <input type="text" placeholder="Unidade (ex: 12º BPM)" id="apoio-pol-unidade" value="${apoioPolicial.unidade}" class="w-full p-2 bg-white border border-emerald-100 rounded-lg text-xs outline-none">
+                                        <input type="text" placeholder="Responsável" id="apoio-pol-resp" value="${apoioPolicial.responsavel}" class="w-full p-2 bg-white border border-emerald-100 rounded-lg text-xs outline-none">
+                                        <input type="text" placeholder="RO / BOPM" id="apoio-pol-reg" value="${apoioPolicial.registro}" class="w-full p-2 bg-white border border-emerald-100 rounded-lg text-xs outline-none">
                                     </div>
                                     <div class="p-4 bg-red-50/50 rounded-xl border border-red-100 space-y-3">
                                         <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Médico</p>
@@ -1220,7 +1220,7 @@
                         
                         if (report.type === 'log') {
                             icon = 'clock';
-                            color = 'blue';
+                            color = 'emerald';
                             title = report.data.codigo;
                             subtitle = `${report.data.inicio} - ${report.data.termino} | ${report.data.local}`;
                         } else if (report.type === 'simples') {
@@ -1246,7 +1246,7 @@
                                 </div>
                                 <p class="text-xs text-slate-500 truncate">${subtitle}</p>
                                 <div class="flex gap-2 mt-3">
-                                    <button onclick="shareReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                                    <button onclick="shareReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
                                         <i data-lucide="share-2" class="w-3 h-3"></i> WhatsApp
                                     </button>
                                     ${isEditable(report.timestamp) ? `
@@ -1356,7 +1356,7 @@
             div.innerHTML = `
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
                     <h3 class="text-lg font-bold mb-4 flex items-center gap-2 uppercase">
-                        <i data-lucide="user" class="text-blue-600"></i>
+                        <i data-lucide="user" class="text-emerald-600"></i>
                         Perfil do Agente
                     </h3>
                     <form id="profile-form" class="space-y-4">
@@ -1384,7 +1384,7 @@
                     <div class="space-y-3">
                         <button onclick="exportData()" class="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 active:bg-slate-100">
                             <div class="flex items-center gap-3">
-                                <i data-lucide="download" class="w-5 h-5 text-blue-600"></i>
+                                <i data-lucide="download" class="w-5 h-5 text-emerald-600"></i>
                                 <span class="text-sm font-medium uppercase">Exportar Dados (JSON)</span>
                             </div>
                             <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
