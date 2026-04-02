@@ -187,6 +187,14 @@
             return Math.random().toString(36).substr(2, 9);
         }
 
+        function isEditable(timestamp) {
+            if (!timestamp) return false;
+            const created = new Date(timestamp).getTime();
+            const now = new Date().getTime();
+            const diffHours = (now - created) / (1000 * 60 * 60);
+            return diffHours <= 24;
+        }
+
         // --- View Management ---
         function switchView(view) {
             state.currentView = view;
@@ -515,31 +523,49 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
                             <tr>
-                                <th class="p-2">Data</th>
-                                <th class="p-2">Viatura</th>
-                                <th class="p-2">CONDUTOR / APOIO</th>
-                                <th class="p-2">${recordsKey === 'kmRecords2' ? 'Local' : 'KM (I/F)'}</th>
-                                <th class="p-2">Hora (I/F)</th>
-                                ${recordsKey === 'kmRecords2' ? '<th class="p-2">Código</th>' : ''}
-                                <th class="p-2">Ação</th>
+                                ${recordsKey === 'kmRecords2' ? `
+                                    <th class="p-2">Viatura</th>
+                                    <th class="p-2">Condutor</th>
+                                    <th class="p-2">Código</th>
+                                    <th class="p-2">Local</th>
+                                    <th class="p-2">Hora</th>
+                                    <th class="p-2">Data</th>
+                                ` : `
+                                    <th class="p-2">Viatura</th>
+                                    <th class="p-2">KM</th>
+                                    <th class="p-2">Condutor</th>
+                                    <th class="p-2">Hora</th>
+                                    <th class="p-2">Data</th>
+                                `}
+                                <th class="p-2 text-center">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             ${records.map(r => `
                                 <tr class="${r.status === 'aberto' ? 'bg-blue-50/50' : ''}">
-                                    <td class="p-2 text-slate-600 font-medium">
-                                        ${r.data ? r.data.split('-').reverse().join('/') : '-'}
-                                    </td>
-                                    <td class="p-2 font-medium">${r.vtr}</td>
-                                    <td class="p-2 text-slate-600">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
-                                    <td class="p-2 text-slate-600">${recordsKey === 'kmRecords2' ? (r.local || '-') : (r.kmInicial + ' / ' + (r.kmFinal || '-'))}</td>
-                                    <td class="p-2 text-slate-600">${r.horaInicial} / ${r.horaFinal || '-'}</td>
-                                    ${recordsKey === 'kmRecords2' ? `<td class="p-2 text-[10px] text-slate-500 uppercase">${r.codigo || '-'}</td>` : ''}
-                                    <td class="p-2">
-                                        <button onclick="editKM('${r.id}', '${recordsKey}')" class="flex items-center gap-1.5 px-2 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                    ${recordsKey === 'kmRecords2' ? `
+                                        <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
+                                        <td class="p-2 text-[10px] text-slate-500 uppercase">${r.codigo || '-'}</td>
+                                        <td class="p-2 text-slate-600">${r.local || '-'}</td>
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
+                                        <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
+                                    ` : `
+                                        <td class="p-2 font-medium whitespace-nowrap">${r.vtr}</td>
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.kmInicial} / ${r.kmFinal || '-'}</td>
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.condutor}${r.apoio ? '<br>' + r.apoio : ''}</td>
+                                        <td class="p-2 text-slate-600 whitespace-nowrap">${r.horaInicial} / ${r.horaFinal || '-'}</td>
+                                        <td class="p-2 text-slate-600 font-medium whitespace-nowrap">${r.data ? r.data.split('-').reverse().join('/') : '-'}</td>
+                                    `}
+                                    <td class="p-2 text-center">
+                                        ${isEditable(r.timestamp) ? `
+                                        <button onclick="editKM('${r.id}', '${recordsKey}')" class="inline-flex items-center gap-1.5 px-2 py-1.5 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                                             <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                                             <span class="text-[10px] font-bold uppercase">Editar</span>
                                         </button>
+                                        ` : `
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase italic">Bloqueado</span>
+                                        `}
                                     </td>
                                 </tr>
                             `).join('')}
@@ -574,6 +600,12 @@
         function editKM(id, recordsKey = 'kmRecords') {
             const record = state[recordsKey].find(r => r.id === id);
             if (!record) return;
+
+            if (!isEditable(record.timestamp)) {
+                showToast('Este registro não pode mais ser editado (limite de 24h excedido).', 'error');
+                return;
+            }
+
             const isClosed = record.status === 'fechado';
             const isTestView = recordsKey === 'kmRecords2';
             
@@ -1217,9 +1249,13 @@
                                     <button onclick="shareReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
                                         <i data-lucide="share-2" class="w-3 h-3"></i> WhatsApp
                                     </button>
+                                    ${isEditable(report.timestamp) ? `
                                     <button onclick="deleteReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-3 py-1.5 rounded-lg">
                                         Excluir
                                     </button>
+                                    ` : `
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase italic px-3 py-1.5">Bloqueado</span>
+                                    `}
                                 </div>
                             </div>
                         `;
@@ -1234,6 +1270,11 @@
         }
 
         function deleteReport(id) {
+            const report = state.reports.find(r => r.id === id);
+            if (report && !isEditable(report.timestamp)) {
+                showToast('Este registro não pode mais ser excluído (limite de 24h excedido).', 'error');
+                return;
+            }
             showModal(`
                 <div class="text-center space-y-4">
                     <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
