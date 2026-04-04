@@ -153,7 +153,7 @@
                 headerTitle: 'Agente de Trânsito',
                 codigos: CODIGOS_DEFAULT,
                 locais: LOCAIS_DEFAULT,
-                urlKM: 'https://script.google.com/macros/s/AKfycbzOSLIwRWr8h8QHSd5zb_upueo74-24hYvpiLOYbezIQEAJuKdRdF0dtrevEm8kb-eEXQ/exec',
+                urlKM: 'https://script.google.com/macros/s/AKfycbx_lSp49r7q-kKuXli3zKMk93hZiVG4N_iQyPlqdWxq86CGUzeWz0RAUV1CSHdcag8cZQ/exec',
                 urlOcorrencia: 'https://script.google.com/macros/s/AKfycbwoCOhMqwIc58zh3l-C0-fpdERVMk3AuIUqQTEuOjS_Ho4Qp7zzPh4KbbqNV8gfomWe/exec',
                 ...savedSettings
             }
@@ -175,13 +175,16 @@
                     hora_final: data.horaFinal || '-'
                 };
                 
-                console.log('Sincronizando com Google Sheets:', payload);
+                // Using GET with query parameters is the most reliable way to avoid CORS issues with Google Apps Script
+                const params = new URLSearchParams(payload).toString();
+                const finalUrl = `${url}${url.includes('?') ? '&' : '?'}${params}`;
                 
-                await fetch(url, {
-                    method: 'POST',
+                console.log('Sincronizando com Google Sheets (GET):', finalUrl);
+                
+                await fetch(finalUrl, {
+                    method: 'GET',
                     mode: 'no-cors',
-                    cache: 'no-cache',
-                    body: JSON.stringify(payload)
+                    cache: 'no-cache'
                 });
                 
                 showToast('Sincronizado com a planilha!', 'success');
