@@ -163,40 +163,32 @@
         async function sendToGoogleSheets(data, url) {
             if (!url) return;
             try {
-                // Standardized payload for the spreadsheet
+                // Exact fields requested by the user for Viatura
                 const payload = {
-                    data_hora: new Date().toLocaleString('pt-BR'),
-                    tipo: data.tipo || 'Registro',
-                    agente: data.condutor || data.agente || state.settings.agente || '-',
-                    vtr: data.vtr || state.settings.vtr || '-',
+                    viatura: data.vtr || '-',
+                    condutor: data.condutor || '-',
                     apoio: data.apoio || '-',
-                    codigo: data.codigo || '-',
-                    local: data.local || data.endereco || '-',
+                    data: data.data || '-',
                     km_inicial: data.kmInicial || '-',
+                    hora_inicial: data.horaInicial || '-',
                     km_final: data.kmFinal || '-',
-                    hora_inicial: data.horaInicial || data.inicio || '-',
-                    hora_final: data.horaFinal || data.termino || '-',
-                    detalhes: data.resumo || (data.items ? JSON.stringify(data.items) : '-')
+                    hora_final: data.horaFinal || '-',
+                    tipo: data.tipo || 'Registro'
                 };
                 
-                console.log('Enviando para Google Sheets:', payload);
+                console.log('Sincronizando com Google Sheets:', payload);
                 
-                // Using URLSearchParams for better compatibility with e.parameter in GAS
-                const params = new URLSearchParams();
-                for (const key in payload) {
-                    params.append(key, payload[key]);
-                }
-
+                // Using JSON.stringify in the body is the most reliable way for GAS e.postData.contents
                 await fetch(url, {
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
-                    body: params
+                    body: JSON.stringify(payload)
                 });
                 
                 showToast('Sincronizado com a planilha!', 'success');
             } catch (error) {
-                console.error('Erro ao enviar para Google Sheets:', error);
+                console.error('Erro ao sincronizar:', error);
                 showToast('Erro na sincronização.', 'error');
             }
         }
