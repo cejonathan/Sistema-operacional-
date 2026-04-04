@@ -168,25 +168,15 @@
                     ...data
                 };
                 
-                // Flatten object for URLSearchParams (convert nested objects to strings)
-                const params = new URLSearchParams();
-                for (const key in payload) {
-                    if (typeof payload[key] === 'object' && payload[key] !== null) {
-                        params.append(key, JSON.stringify(payload[key]));
-                    } else {
-                        params.append(key, payload[key] || '');
-                    }
-                }
-
                 console.log('Enviando dados para Google Sheets:', payload);
                 
-                // Using mode: 'no-cors' with URLSearchParams sends application/x-www-form-urlencoded
-                // This is the most compatible way for Google Apps Script e.parameter
+                // Sending as a simple stringified JSON with no-cors.
+                // Google Apps Script will receive this in e.postData.contents
                 await fetch(url, {
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
-                    body: params
+                    body: JSON.stringify(payload)
                 });
                 
                 showToast('Dados enviados para a planilha!', 'success');
@@ -428,7 +418,7 @@
                 if (isTestView) {
                     const btnDiv = document.createElement('div');
                     btnDiv.innerHTML = `
-                        <button onclick="state.ui.showTestForm = true; render();" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-200 active:scale-[0.98] transition-transform uppercase flex items-center justify-center gap-2">
+                        <button onclick="state.ui.showTestForm = true; render();" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform uppercase flex items-center justify-center gap-2">
                             <i data-lucide="plus" class="w-5 h-5"></i>
                             ABRIR NOVA OCORRÊNCIA
                         </button>
