@@ -1498,6 +1498,12 @@
                         <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl active:scale-[0.98] transition-transform uppercase">
                             SALVAR CONFIGURAÇÕES
                         </button>
+                        <div class="pt-2">
+                            <button type="button" onclick="testSync()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 font-bold py-3 rounded-xl active:scale-[0.98] transition-transform uppercase flex items-center justify-center gap-2">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                Testar Sincronização
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -1552,6 +1558,20 @@
                     showToast('Configurações de integração salvas!');
                 };
             }
+        }
+
+        function testSync() {
+            const url = state.settings.urlKM || state.settings.urlOcorrencia;
+            if (!url) {
+                showToast('Configure uma URL primeiro!', 'error');
+                return;
+            }
+            
+            showToast('Enviando teste...', 'success');
+            sendToGoogleSheets({
+                tipo: 'TESTE DE CONEXÃO',
+                detalhes: 'Este é um registro de teste para verificar a ligação com a planilha.'
+            }, url);
         }
 
         function exportData() {
