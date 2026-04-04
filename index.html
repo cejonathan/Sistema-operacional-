@@ -166,9 +166,8 @@
                 // Format date to DD/MM/YYYY
                 const formattedDate = data.data ? data.data.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
 
-                // Exact fields requested by the user in the specified order
+                // EXACT ORDER REQUESTED: Viatura, KM Inicial, Hora Inicial, KM Final, Hora Final, Condutor, Apoio, Data
                 const payload = {
-                    id: data.id || '-',
                     viatura: data.vtr || '-',
                     km_inicial: data.kmInicial || '-',
                     hora_inicial: data.horaInicial || '-',
@@ -177,7 +176,7 @@
                     condutor: data.condutor || '-',
                     apoio: data.apoio || '-',
                     data: formattedDate,
-                    status: data.status || 'aberto'
+                    id: data.id || '-' // ID for row matching in GAS
                 };
                 
                 // Using GET with query parameters for maximum reliability
@@ -1529,7 +1528,7 @@
                 </div>
 
                 <div class="text-center py-4">
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Agente de Trânsito v2.0</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Agente de Trânsito v2.1</p>
                     <p class="text-[10px] text-slate-300 uppercase">Desenvolvido para Agentes de Trânsito</p>
                 </div>
             `;
