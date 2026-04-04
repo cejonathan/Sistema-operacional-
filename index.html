@@ -163,22 +163,36 @@
         async function sendToGoogleSheets(data, url) {
             if (!url) return;
             try {
-                // Prepare data for the sheet
                 const payload = {
                     timestamp: new Date().toLocaleString('pt-BR'),
                     ...data
                 };
                 
-                // Using no-cors because Google Apps Script doesn't support CORS for simple POSTs
-                // The body will be sent as text/plain which GAS can handle
+                // Flatten object for URLSearchParams (convert nested objects to strings)
+                const params = new URLSearchParams();
+                for (const key in payload) {
+                    if (typeof payload[key] === 'object' && payload[key] !== null) {
+                        params.append(key, JSON.stringify(payload[key]));
+                    } else {
+                        params.append(key, payload[key] || '');
+                    }
+                }
+
+                console.log('Enviando dados para Google Sheets:', payload);
+                
+                // Using mode: 'no-cors' with URLSearchParams sends application/x-www-form-urlencoded
+                // This is the most compatible way for Google Apps Script e.parameter
                 await fetch(url, {
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
-                    body: JSON.stringify(payload)
+                    body: params
                 });
+                
+                showToast('Dados enviados para a planilha!', 'success');
             } catch (error) {
                 console.error('Erro ao enviar para Google Sheets:', error);
+                showToast('Erro ao sincronizar com a planilha.', 'error');
             }
         }
 
@@ -1552,17 +1566,23 @@
         };
 
         // --- Toast System ---
-        function showToast(message) {
+        function showToast(message, type = 'success') {
             const toast = document.createElement('div');
-            toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] bg-slate-800 text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl animate-slide-up';
-            toast.textContent = message;
+            const bgColor = type === 'error' ? 'bg-red-600' : 'bg-emerald-600';
+            toast.className = `fixed bottom-20 left-1/2 -translate-x-1/2 z-[100] ${bgColor} text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl animate-slide-up flex items-center gap-2`;
+            
+            const icon = type === 'error' ? '<i data-lucide="alert-circle" class="w-4 h-4"></i>' : '<i data-lucide="check-circle" class="w-4 h-4"></i>';
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            
             document.body.appendChild(toast);
+            lucide.createIcons();
+            
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translate(-50%, 20px)';
                 toast.style.transition = 'all 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
-            }, 2000);
+            }, 3000);
         }
 
         // --- Modal System ---
