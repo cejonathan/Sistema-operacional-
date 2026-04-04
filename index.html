@@ -163,26 +163,41 @@
         async function sendToGoogleSheets(data, url) {
             if (!url) return;
             try {
+                // Standardized payload for the spreadsheet
                 const payload = {
-                    timestamp: new Date().toLocaleString('pt-BR'),
-                    ...data
+                    data_hora: new Date().toLocaleString('pt-BR'),
+                    tipo: data.tipo || 'Registro',
+                    agente: data.condutor || data.agente || state.settings.agente || '-',
+                    vtr: data.vtr || state.settings.vtr || '-',
+                    apoio: data.apoio || '-',
+                    codigo: data.codigo || '-',
+                    local: data.local || data.endereco || '-',
+                    km_inicial: data.kmInicial || '-',
+                    km_final: data.kmFinal || '-',
+                    hora_inicial: data.horaInicial || data.inicio || '-',
+                    hora_final: data.horaFinal || data.termino || '-',
+                    detalhes: data.resumo || (data.items ? JSON.stringify(data.items) : '-')
                 };
                 
-                console.log('Enviando dados para Google Sheets:', payload);
+                console.log('Enviando para Google Sheets:', payload);
                 
-                // Sending as a simple stringified JSON with no-cors.
-                // Google Apps Script will receive this in e.postData.contents
+                // Using URLSearchParams for better compatibility with e.parameter in GAS
+                const params = new URLSearchParams();
+                for (const key in payload) {
+                    params.append(key, payload[key]);
+                }
+
                 await fetch(url, {
                     method: 'POST',
                     mode: 'no-cors',
                     cache: 'no-cache',
-                    body: JSON.stringify(payload)
+                    body: params
                 });
                 
-                showToast('Dados enviados para a planilha!', 'success');
+                showToast('Sincronizado com a planilha!', 'success');
             } catch (error) {
                 console.error('Erro ao enviar para Google Sheets:', error);
-                showToast('Erro ao sincronizar com a planilha.', 'error');
+                showToast('Erro na sincronização.', 'error');
             }
         }
 
@@ -1322,6 +1337,9 @@
                                     <button onclick="shareReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
                                         <i data-lucide="share-2" class="w-3 h-3"></i> WhatsApp
                                     </button>
+                                    <button onclick="syncReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Planilha
+                                    </button>
                                     ${isEditable(report.timestamp) ? `
                                     <button onclick="deleteReport('${report.id}')" class="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-3 py-1.5 rounded-lg">
                                         Excluir
@@ -1340,6 +1358,20 @@
             
             container.appendChild(div);
             lucide.createIcons();
+        }
+
+        function syncReport(id) {
+            const report = state.reports.find(r => r.id === id);
+            if (!report) return;
+            
+            const url = (report.type === 'log' || report.type === 'simples' || report.type === 'especial') 
+                ? state.settings.urlOcorrencia 
+                : state.settings.urlKM;
+                
+            sendToGoogleSheets({
+                tipo: report.type.toUpperCase(),
+                ...report.data
+            }, url);
         }
 
         function deleteReport(id) {
