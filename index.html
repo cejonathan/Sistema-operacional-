@@ -141,21 +141,47 @@
         const DET_CODES = ["DET 02", "DET 03", "DET 06", "DET 07", "DET 08", "DET 10", "DET 12", "DET 17", "DET 18", "DET 20", "DET 22", "DET 35", "DET 41", "DET 44", "DET 46", "DET 47", "DET 49", "DET 54", "DET 55", "DET 59", "DET 61", "DET 62", "DET 65", "DET 67", "DET 68", "DET 74", "DET 75", "DET 86", "DET 89", "DET 90"];
         const VTR_CODES = ["AL 1389", "AL 1390", "AL 1391", "AL 1392", "AL 1393", "AL 1394", "AL 1395", "MH 01", "MH 02", "MH 03", "MH 04", "MH 05", "MH 06", "MH 07", "MH 08"];
 
+        const savedSettings = JSON.parse(localStorage.getItem('settings') || '{}');
         let state = {
             currentView: 'km',
             kmRecords: JSON.parse(localStorage.getItem('kmRecords') || '[]'),
             kmRecords2: JSON.parse(localStorage.getItem('kmRecords2') || '[]'),
             reports: JSON.parse(localStorage.getItem('reports') || '[]'),
-            settings: JSON.parse(localStorage.getItem('settings') || JSON.stringify({
+            settings: {
                 agente: '',
                 vtr: VTR_CODES[0],
                 headerTitle: 'Agente de Trânsito',
                 codigos: CODIGOS_DEFAULT,
-                locais: LOCAIS_DEFAULT
-            }))
+                locais: LOCAIS_DEFAULT,
+                urlKM: 'https://script.google.com/macros/s/AKfycbkm_R2mt_yMJsikxogcFztxN_nXT7hXQ0P98vIC_RmzMf5W1DmdV660UhoPJhDS7nytA/exec',
+                urlOcorrencia: 'https://script.google.com/macros/s/AKfycbwoCOhMqwIc58zh3l-C0-fpdERVMk3AuIUqQTEuOjS_Ho4Qp7zzPh4KbbqNV8gfomWe/exec',
+                ...savedSettings
+            }
         };
 
         // --- Utilities ---
+        async function sendToGoogleSheets(data, url) {
+            if (!url) return;
+            try {
+                // Prepare data for the sheet
+                const payload = {
+                    timestamp: new Date().toLocaleString('pt-BR'),
+                    ...data
+                };
+                
+                // Using no-cors because Google Apps Script doesn't support CORS for simple POSTs
+                // The body will be sent as text/plain which GAS can handle
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    body: JSON.stringify(payload)
+                });
+            } catch (error) {
+                console.error('Erro ao enviar para Google Sheets:', error);
+            }
+        }
+
         function saveState() {
             localStorage.setItem('kmRecords', JSON.stringify(state.kmRecords));
             localStorage.setItem('kmRecords2', JSON.stringify(state.kmRecords2));
@@ -371,6 +397,14 @@
                         timestamp: new Date().toISOString()
                     };
                     state[recordsKey].push(newRecord);
+
+                    // Send to Google Sheets
+                    const url = isTestView ? state.settings.urlOcorrencia : state.settings.urlKM;
+                    sendToGoogleSheets({
+                        tipo: isTestView ? 'Abertura Ocorrência' : 'Abertura KM',
+                        ...newRecord
+                    }, url);
+
                     state.ui.showTestForm = false;
                     saveState();
                     render();
@@ -480,6 +514,14 @@
                     }
                     
                     r.status = 'fechado';
+                    
+                    // Send to Google Sheets
+                    const url = isTestView ? state.settings.urlOcorrencia : state.settings.urlKM;
+                    sendToGoogleSheets({
+                        tipo: 'Fechamento',
+                        ...r
+                    }, url);
+
                     saveState();
                     render();
                 };
@@ -808,6 +850,13 @@
                         }
                     };
                     state.reports.push(report);
+                    
+                    // Send to Google Sheets
+                    sendToGoogleSheets({
+                        tipo: 'Relatório Log',
+                        ...report.data
+                    }, state.settings.urlOcorrencia);
+
                     saveState();
                     switchView('historico');
                 };
@@ -884,6 +933,14 @@
                         data: { items }
                     };
                     state.reports.push(report);
+                    
+                    // Send to Google Sheets
+                    sendToGoogleSheets({
+                        tipo: 'Registro Simples',
+                        agente: report.agent,
+                        itens: JSON.stringify(items)
+                    }, state.settings.urlOcorrencia);
+
                     saveState();
                     switchView('historico');
                 };
@@ -1105,6 +1162,18 @@
                             }
                         };
                         state.reports.push(report);
+
+                        // Send to Google Sheets
+                        sendToGoogleSheets({
+                            tipo: 'Sinistro',
+                            ...report.data,
+                            photos: undefined, // Don't send large photo data to sheets
+                            envolvidos: JSON.stringify(envolvidos),
+                            vitimas: JSON.stringify(vitimas),
+                            apoioPolicial: JSON.stringify(apoioPolicial),
+                            socorroMedico: JSON.stringify(socorroMedico)
+                        }, state.settings.urlOcorrencia);
+
                         saveState();
                         showToast('Relatório salvo com sucesso!');
                         switchView('historico');
@@ -1378,6 +1447,26 @@
 
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
                     <h3 class="text-lg font-bold mb-4 flex items-center gap-2 uppercase">
+                        <i data-lucide="link" class="text-emerald-600"></i>
+                        Integração Google Sheets
+                    </h3>
+                    <form id="sheets-form" class="space-y-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">URL Planilha KM</label>
+                            <input type="text" name="urlKM" value="${state.settings.urlKM || ''}" placeholder="https://script.google.com/..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500 uppercase">URL Planilha Ocorrências</label>
+                            <input type="text" name="urlOcorrencia" value="${state.settings.urlOcorrencia || ''}" placeholder="https://script.google.com/..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs">
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl active:scale-[0.98] transition-transform uppercase">
+                            SALVAR CONFIGURAÇÕES
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2 uppercase">
                         <i data-lucide="database" class="text-slate-600"></i>
                         Dados e Backup
                     </h3>
@@ -1415,6 +1504,18 @@
                 saveState();
                 showToast('Perfil atualizado!');
             };
+
+            const sheetsForm = document.getElementById('sheets-form');
+            if (sheetsForm) {
+                sheetsForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    state.settings.urlKM = formData.get('urlKM');
+                    state.settings.urlOcorrencia = formData.get('urlOcorrencia');
+                    saveState();
+                    showToast('Configurações de integração salvas!');
+                };
+            }
         }
 
         function exportData() {
